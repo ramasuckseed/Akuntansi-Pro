@@ -1,0 +1,190 @@
+# 📊 AkunTansi Pro
+
+> Modern Browser-Based Accounting System built with Vanilla JavaScript.
+
+![Version](https://img.shields.io/badge/version-v1.3-gold)
+![License](https://img.shields.io/badge/license-MIT-green)
+![JavaScript](https://img.shields.io/badge/Vanilla-JavaScript-yellow)
+![HTML](https://img.shields.io/badge/HTML5-CSS3-blue)
+
+---
+
+## Overview
+
+AkunTansi Pro adalah sistem akuntansi lengkap berbasis browser yang dirancang untuk UKM, konsultan bisnis, auditor, dan perusahaan multi-entitas.
+
+Tidak membutuhkan server maupun database.
+
+Semua data tersimpan secara lokal menggunakan **Local Storage** sehingga aplikasi dapat berjalan secara offline.
+
+---
+
+## Features
+
+### Accounting
+
+- Multi Company
+- Chart of Accounts
+- Opening Balance
+- General Journal
+- Adjusting Journal
+- Automatic Posting
+- General Ledger
+- Trial Balance
+
+---
+
+### Financial Statements
+
+- Balance Sheet
+- Income Statement
+- Cash Flow Statement
+- Comparative Financial Report
+- Financial Ratio Dashboard
+
+---
+
+### Business Dashboard
+
+- KPI Dashboard
+- Financial Charts
+- Top Account Analysis
+- Asset Structure
+- Capital Structure
+- Financial Ratio Interpretation
+
+---
+
+### Import & Export
+
+- CSV Import
+- Excel Export
+- Session Backup
+- Session Restore
+- HTML Presentation Export
+
+---
+
+### Industry Templates
+
+Available COA templates:
+
+- Mining
+- Trading
+- Service
+- Manufacturing
+- Property
+
+---
+
+## Screenshots
+
+```
+Dashboard
+```
+
+(Add screenshots here)
+
+```
+General Journal
+```
+
+(Add screenshots here)
+
+```
+Financial Statements
+```
+
+(Add screenshots here)
+
+---
+
+## Technology
+
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- Chart.js
+- SheetJS (xlsx)
+
+---
+
+## Architecture
+
+```
+Journal
+      │
+      ▼
+General Ledger
+      │
+      ▼
+Trial Balance
+      │
+ ┌────┴────┐
+ ▼         ▼
+Balance    Income
+ Sheet      Statement
+      │
+      ▼
+Cash Flow
+      │
+      ▼
+Financial Ratio
+```
+
+---
+
+## Folder Structure
+
+```
+/
+│
+├── index.html
+├── README.md
+├── LICENSE
+└── assets/
+      screenshots/
+```
+
+---
+
+## Roadmap
+
+- [ ] Login System
+- [ ] Cloud Sync
+- [ ] PostgreSQL Backend
+- [ ] Multi User
+- [ ] Approval Workflow
+- [ ] Inventory Module
+- [ ] Fixed Asset Module
+- [ ] Tax Module
+- [ ] AI Financial Insights
+- [ ] Budget vs Actual
+- [ ] Forecasting
+
+---
+
+## Why this project?
+
+This project demonstrates:
+
+- Accounting System Design
+- Financial Reporting
+- Business Intelligence Dashboard
+- Vanilla JavaScript Architecture
+- Data Processing
+- Financial Analysis
+
+---
+
+## Author
+
+**Rama**
+
+Business Consultant • Accounting • Business Intelligence • Financial Reporting
+
+---
+
+## License
+
+MIT License

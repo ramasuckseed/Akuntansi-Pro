@@ -1,0 +1,3023 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AkunTansi Pro — Sistem Akuntansi Lengkap</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --coal:#1a2332;--gold:#c9a84c;--gold-lt:rgba(201,168,76,0.12);
+  --paper:#f5f0e8;--white:#ffffff;--slate:#64748b;--line:rgba(201,168,76,0.2);
+  --green:#2d6a4f;--green-lt:#d8f3dc;--red:#b5282b;--red-lt:#fce8e8;
+  --blue:#1e40af;--blue-lt:#dbeafe;--sidebar:240px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--coal);min-height:100vh;}
+
+/* ── SPLASH ── */
+#splash{position:fixed;inset:0;background:var(--coal);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;transition:opacity .5s;}
+#splash.out{opacity:0;pointer-events:none;}
+.sp-logo{font-family:'Playfair Display',serif;font-size:42px;font-weight:900;color:var(--gold);letter-spacing:-1px;}
+.sp-sub{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:52px;}
+.sp-card{width:500px;background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.25);border-radius:18px;padding:36px;text-align:center;}
+.sp-icon{font-size:44px;margin-bottom:14px;}
+.sp-title{font-size:18px;font-weight:600;color:#fff;margin-bottom:8px;}
+.sp-desc{font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;margin-bottom:24px;}
+.sp-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn-gold{padding:11px 24px;background:var(--gold);color:var(--coal);font-size:13px;font-weight:700;border-radius:8px;cursor:pointer;border:none;transition:all .2s;}
+.btn-gold:hover{background:#e8c55a;transform:translateY(-1px);}
+.btn-outline{padding:11px 24px;background:transparent;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.2);transition:all .2s;}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+.sp-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:28px;}
+.sp-step{background:rgba(255,255,255,.04);border-radius:10px;padding:14px 12px;border:1px solid rgba(201,168,76,.1);text-align:center;}
+.sp-step-n{font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);font-weight:700;}
+.sp-step-t{font-size:10px;color:rgba(255,255,255,.4);margin-top:5px;line-height:1.5;}
+#fileInput{display:none;}
+
+/* ── LAYOUT ── */
+#app{display:none;flex-direction:column;min-height:100vh;}
+#app.on{display:flex;}
+.topbar{background:var(--coal);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:100;}
+.topbar-l{display:flex;align-items:center;gap:14px;}
+.t-logo{font-family:'Playfair Display',serif;font-size:17px;color:var(--gold);font-weight:700;}
+.t-co{font-size:13px;color:rgba(255,255,255,.55);}
+.t-period{font-size:11px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.06);padding:4px 12px;border-radius:20px;}
+.topbar-r{display:flex;gap:8px;align-items:center;}
+.t-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+.t-btn-ghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.12);}
+.t-btn-ghost:hover{background:rgba(255,255,255,.14);color:#fff;}
+.t-btn-gold{background:var(--gold);color:var(--coal);}
+.t-btn-gold:hover{background:#e8c55a;}
+.year-bar{background:#141c28;padding:7px 28px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(201,168,76,.15);}
+.year-bar-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-right:6px;}
+.year-tab{padding:5px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.12);transition:all .18s;}
+.year-tab:hover{color:#fff;border-color:var(--gold);}
+.year-tab.on{background:var(--gold);color:var(--coal);border-color:var(--gold);}
+.wrap{display:flex;flex:1;}
+
+/* ── SIDEBAR ── */
+.sb{width:var(--sidebar);background:var(--coal);padding:16px 0;flex-shrink:0;min-height:100%;}
+.sb-company{padding:12px 18px 16px;border-bottom:1px solid rgba(201,168,76,.15);margin-bottom:6px;}
+.sb-co-name{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-co-sub{font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;}
+.sb-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.25);padding:10px 18px 4px;}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 18px;cursor:pointer;color:rgba(255,255,255,.48);font-size:12.5px;font-weight:500;border-left:3px solid transparent;transition:all .17s;}
+.sb-item:hover{color:#fff;background:rgba(255,255,255,.04);}
+.sb-item.on{color:var(--gold);border-left-color:var(--gold);background:rgba(201,168,76,.07);}
+.sb-icon{font-size:14px;width:16px;text-align:center;}
+.sb-badge{margin-left:auto;font-size:9px;background:var(--red);color:#fff;padding:2px 6px;border-radius:8px;font-weight:700;}
+
+/* ── MAIN ── */
+.main{flex:1;padding:24px 28px 48px;overflow:auto;}
+.sec{display:none;}.sec.on{display:block;}
+.sec-hd{font-family:'Playfair Display',serif;font-size:21px;font-weight:700;color:var(--coal);margin-bottom:4px;}
+.sec-sub{font-size:12px;color:var(--slate);margin-bottom:20px;line-height:1.6;}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.tb-btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:flex;align-items:center;gap:6px;}
+.tb-primary{background:var(--coal);color:#fff;}.tb-primary:hover{background:#243044;}
+.tb-success{background:var(--green);color:#fff;}.tb-success:hover{background:#245a40;}
+.tb-danger{background:var(--red);color:#fff;}.tb-danger:hover{opacity:.85;}
+.tb-secondary{background:var(--white);color:var(--coal);border:1px solid var(--line);}.tb-secondary:hover{border-color:var(--gold);}
+.tb-gold{background:var(--gold);color:var(--coal);}.tb-gold:hover{background:#e8c55a;}
+input[type=file].hidden{display:none;}
+.tb-search{padding:8px 14px;border:1px solid var(--line);border-radius:8px;font-size:12px;background:var(--white);width:220px;outline:none;}
+.tb-search:focus{border-color:var(--gold);}
+.tb-select{padding:7px 12px;border:1px solid var(--line);border-radius:8px;font-size:12px;background:var(--white);outline:none;cursor:pointer;}
+
+/* ── CARDS ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.kpi{background:var(--white);border-radius:11px;padding:16px 18px;border:1px solid var(--line);position:relative;overflow:hidden;transition:transform .17s;}
+.kpi:hover{transform:translateY(-2px);}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);}
+.kpi.kpi-r::before{background:var(--red);}
+.kpi.kpi-g::before{background:var(--green);}
+.kpi.kpi-b::before{background:var(--blue);}
+.kpi-lbl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--slate);margin-bottom:6px;}
+.kpi-val{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:var(--coal);}
+.kpi-val.neg{color:var(--red);}
+.kpi-val.pos{color:var(--green);}
+.kpi-meta{font-size:11px;color:var(--slate);margin-top:4px;}
+
+/* ── TABLE ── */
+.tbl-card{background:var(--white);border-radius:11px;border:1px solid var(--line);overflow:hidden;margin-bottom:18px;}
+.tbl-hd{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);}
+.tbl-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:600px;}
+thead th{text-align:left;padding:9px 16px;font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--slate);background:#fafafa;border-bottom:1px solid var(--line);white-space:nowrap;}
+thead th.r{text-align:right;}
+tbody td{padding:10px 16px;font-size:12px;border-bottom:1px solid rgba(0,0,0,.04);color:var(--coal);white-space:nowrap;}
+tbody td.r{text-align:right;font-weight:500;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#fafdf8;}
+.tr-total{background:#f9f6ee!important;font-weight:700!important;}
+.tr-total td{font-weight:700!important;border-top:2px solid var(--line)!important;}
+.tr-section td{font-size:10px!important;font-weight:700!important;letter-spacing:1px!important;text-transform:uppercase!important;color:var(--slate)!important;background:#fafafa!important;padding:6px 16px!important;}
+.tr-grand{background:#f0e9d4!important;}
+.tr-grand td{font-weight:700!important;font-size:13px!important;border-top:2px solid var(--gold)!important;}
+.neg{color:var(--red)!important;}
+.pos{color:var(--green)!important;}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;}
+.badge-green{background:var(--green-lt);color:var(--green);}
+.badge-red{background:var(--red-lt);color:var(--red);}
+.badge-blue{background:var(--blue-lt);color:var(--blue);}
+.badge-gold{background:var(--gold-lt);color:#a07830;}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:800;align-items:center;justify-content:center;}
+.modal-bg.on{display:flex;}
+.modal{background:var(--white);border-radius:16px;width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.2);}
+.modal-hd{padding:20px 24px 0;display:flex;justify-content:space-between;align-items:center;}
+.modal-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;}
+.modal-close{font-size:20px;cursor:pointer;color:var(--slate);line-height:1;background:none;border:none;}
+.modal-close:hover{color:var(--coal);}
+.modal-body{padding:20px 24px 24px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-grid-1{grid-template-columns:1fr;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--slate);}
+.form-group input,.form-group select,.form-group textarea{
+  padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;
+  font-family:'DM Sans',sans-serif;outline:none;background:var(--white);transition:border-color .2s;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold);}
+.form-group textarea{resize:vertical;min-height:70px;}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding-top:16px;border-top:1px solid var(--line);}
+.ir-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.ir-stat{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;}
+.ir-l{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--slate);}
+.ir-v{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;margin-top:4px;}
+.ir-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.ir-tbl td,.ir-tbl th{padding:7px 10px;border-bottom:1px solid #f0ebe0;}
+.ir-tbl th{font-size:10px;text-transform:uppercase;color:var(--slate);text-align:left;}
+.ir-tbl .r{text-align:right;font-variant-numeric:tabular-nums;}
+.ir-ok td{background:var(--green-lt);color:var(--green);}
+.ir-bad td{background:var(--red-lt);color:var(--red);}
+.ir-warn{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--gold-lt);border:1px solid var(--line);font-size:12px;line-height:1.6;}
+.ir-warn-red{background:var(--red-lt);border-color:rgba(181,40,43,.25);}
+.ir-warn-ok{background:var(--green-lt);border-color:rgba(45,106,79,.25);color:var(--green);}
+
+/* ── JOURNAL ENTRY LINES ── */
+.je-lines{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:10px;}
+.je-line-hd{display:grid;grid-template-columns:2fr 2fr 1fr 1fr 28px;gap:8px;padding:7px 10px;background:#fafafa;font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--slate);}
+.je-line-row{display:grid;grid-template-columns:2fr 2fr 1fr 1fr 28px;gap:8px;padding:6px 10px;border-top:1px solid rgba(0,0,0,.05);}
+.je-line-row input,.je-line-row select{padding:5px 8px;border:1px solid var(--line);border-radius:6px;font-size:12px;width:100%;}
+.je-total{display:grid;grid-template-columns:2fr 2fr 1fr 1fr 28px;gap:8px;padding:8px 10px;background:#f9f6ee;border-top:2px solid var(--line);}
+.je-total span{font-size:12px;font-weight:700;text-align:right;}
+.btn-del-line{background:none;border:none;color:var(--slate);cursor:pointer;font-size:15px;padding:0;line-height:1;}
+.btn-del-line:hover{color:var(--red);}
+.je-add-line{width:100%;padding:8px;border:none;background:none;color:var(--green);font-size:12px;font-weight:600;cursor:pointer;border-top:1px dashed var(--line);}
+.je-add-line:hover{background:var(--green-lt);}
+.je-balance{padding:8px 10px;text-align:right;font-size:12px;font-weight:600;}
+.je-balance.ok{color:var(--green);}
+.je-balance.err{color:var(--red);}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+.fb-label{font-size:11px;font-weight:600;color:var(--slate);}
+
+/* ── CHART CARD ── */
+.chart-grid{display:grid;gap:16px;margin-bottom:18px;}
+.cg-2{grid-template-columns:1fr 1fr;}
+.cg-3{grid-template-columns:2fr 1fr;}
+.cc{background:var(--white);border-radius:11px;padding:20px;border:1px solid var(--line);}
+.cc-hd{display:flex;justify-content:space-between;margin-bottom:14px;}
+.cc-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;}
+.cc-sub{font-size:11px;color:var(--slate);margin-top:2px;}
+canvas{max-height:200px;}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast-item{padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.15);animation:slide-in .3s ease;max-width:320px;}
+.toast-ok{background:var(--green);color:#fff;}
+.toast-err{background:var(--red);color:#fff;}
+.toast-info{background:var(--coal);color:#fff;}
+@keyframes slide-in{from{transform:translateX(60px);opacity:0}to{transform:none;opacity:1}}
+
+/* ── STATUS BAR ── */
+.statusbar{background:rgba(45,106,79,.08);border-top:1px solid rgba(45,106,79,.15);padding:5px 28px;font-size:11px;color:var(--green);display:flex;align-items:center;gap:8px;}
+.sb-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── COMPANY SWITCHER ── */
+.co-switcher{position:relative;}
+.co-dropdown{display:none;position:absolute;top:110%;left:0;background:var(--white);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.12);min-width:220px;z-index:200;overflow:hidden;}
+.co-dropdown.on{display:block;}
+.co-item{padding:10px 16px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s;}
+.co-item:hover{background:var(--paper);}
+.co-item.active{color:var(--green);font-weight:600;}
+.co-add{padding:10px 16px;font-size:12px;cursor:pointer;color:var(--green);border-top:1px solid var(--line);font-weight:600;}
+.co-add:hover{background:var(--green-lt);}
+</style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══ -->
+<div id="splash">
+  <div class="sp-logo">AkunTansi Pro</div>
+  <div class="sp-sub">Sistem Akuntansi Multi-Perusahaan</div>
+  <div class="sp-card">
+    <div class="sp-icon">🏢</div>
+    <div class="sp-title">Mulai Sesi Baru atau Lanjutkan</div>
+    <div class="sp-desc">
+      Sistem akuntansi lengkap berbasis browser.<br>
+      Jurnal → Buku Besar → Trial Balance → Laporan Keuangan.<br>
+      Data tersimpan di browser Anda (localStorage).
+    </div>
+    <div class="sp-btns">
+      <button class="btn-gold" onclick="initApp()">🚀 Mulai Baru / Lanjutkan</button>
+      <button class="btn-outline" onclick="document.getElementById('importSessionInput').click()">📂 Import Data Sesi</button>
+      <input type="file" id="importSessionInput" class="hidden" accept=".json" onchange="importSession(this)">
+    </div>
+    <div class="sp-steps">
+      <div class="sp-step"><div class="sp-step-n">01</div><div class="sp-step-t">Setup Perusahaan & COA</div></div>
+      <div class="sp-step"><div class="sp-step-n">02</div><div class="sp-step-t">Input Jurnal / Upload Template CSV</div></div>
+      <div class="sp-step"><div class="sp-step-n">03</div><div class="sp-step-t">Auto: TB, Neraca, L/R, Arus Kas</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-l">
+      <div class="t-logo">⚖️ AkunTansi Pro</div>
+      <div class="co-switcher" id="coSwitcher">
+        <div class="t-co" style="cursor:pointer" onclick="toggleCoDrop()">
+          <span id="coName">—</span> ▾
+        </div>
+        <div class="co-dropdown" id="coDrop"></div>
+      </div>
+      <div class="t-period" id="periodInfo">—</div>
+    </div>
+    <div class="topbar-r">
+      <button class="t-btn t-btn-ghost" onclick="exportSession()">💾 Simpan Sesi</button>
+      <button class="t-btn t-btn-ghost" onclick="exportPresentationHTML()">📊 Presentasi HTML</button>
+      <button class="t-btn t-btn-gold" onclick="showModal('modalJournal')">✚ Jurnal Baru</button>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="year-bar" id="yearBar">
+    <span class="year-bar-label">Tahun Buku</span>
+    <div class="year-tab on" onclick="setYear('',this)">Semua</div>
+  </div>
+
+  <div class="wrap">
+    <div class="sb">
+      <div class="sb-company">
+        <div class="sb-co-name" id="sbCoName">—</div>
+        <div class="sb-co-sub">Multi-Company Accounting</div>
+      </div>
+      <div class="sb-label">Transaksi</div>
+      <div class="sb-item on" onclick="show('dashboard',this)"><span class="sb-icon">◈</span> Dashboard</div>
+      <div class="sb-item" onclick="show('jurnal',this)"><span class="sb-icon">📝</span> Jurnal Umum <span class="sb-badge" id="badge-jurnal">0</span></div>
+      <div class="sb-item" onclick="show('penyesuaian',this)"><span class="sb-icon">🔧</span> Jurnal Penyesuaian</div>
+      <div class="sb-item" onclick="show('bukubesar',this)"><span class="sb-icon">📖</span> Buku Besar</div>
+      <div class="sb-label">Laporan</div>
+      <div class="sb-item" onclick="show('tb',this)"><span class="sb-icon">⚖️</span> Trial Balance</div>
+      <div class="sb-item" onclick="show('neraca',this)"><span class="sb-icon">⊞</span> Neraca</div>
+      <div class="sb-item" onclick="show('labarugi',this)"><span class="sb-icon">◐</span> Laba Rugi</div>
+      <div class="sb-item" onclick="show('aruskas',this)"><span class="sb-icon">⟳</span> Arus Kas</div>
+      <div class="sb-item" onclick="show('rasio',this)"><span class="sb-icon">📊</span> Rasio Keuangan</div>
+      <div class="sb-item" onclick="show('komparatif',this)"><span class="sb-icon">⇄</span> Komparatif 2 Periode</div>
+      <div class="sb-label">Setup</div>
+      <div class="sb-item" onclick="show('coa',this)"><span class="sb-icon">📋</span> Chart of Accounts</div>
+      <div class="sb-item" onclick="show('saldoawal',this)"><span class="sb-icon">🔄</span> Saldo Awal (Opening)</div>
+      <div class="sb-item" onclick="show('perusahaan',this)"><span class="sb-icon">🏢</span> Perusahaan</div>
+    </div>
+
+    <div class="main">
+
+      <!-- ── DASHBOARD ── -->
+      <div id="dashboard" class="sec on">
+        <div class="sec-hd">Dashboard</div>
+        <div class="sec-sub" id="dash-period-sub">Ringkasan keuangan perusahaan terpilih.</div>
+        <div class="kpi-row" id="dash-kpis"></div>
+        <div class="chart-grid cg-2">
+          <div class="cc">
+            <div class="cc-hd"><div><div class="cc-title">Neraca Ringkas</div><div class="cc-sub">Aset vs Kewajiban vs Ekuitas</div></div></div>
+            <canvas id="c-dash-bs"></canvas>
+          </div>
+          <div class="cc">
+            <div class="cc-hd"><div><div class="cc-title">Top 5 Akun (Saldo Tertinggi)</div><div class="cc-sub">Berdasarkan buku besar</div></div></div>
+            <canvas id="c-dash-top"></canvas>
+          </div>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-hd"><div class="tbl-title">Jurnal Terbaru</div></div>
+          <div class="tbl-wrap"><table id="t-recent-journals">
+            <thead><tr><th>Tgl</th><th>No. Voucher</th><th>Keterangan</th><th class="r">Debit</th><th class="r">Kredit</th><th>Tipe</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── JURNAL UMUM ── -->
+      <div id="jurnal" class="sec">
+        <div class="sec-hd">Jurnal Umum</div>
+        <div class="sec-sub">Catat transaksi harian. Untuk input massal: unduh <b>Template CSV</b> → isi di Excel/Sheets → <b>Upload CSV</b>. (Tipe otomatis = Jurnal Umum, tidak akan tercampur.)</div>
+        <div class="toolbar">
+          <button class="tb-btn tb-primary" onclick="showModal('modalJournal')">✚ Tambah Jurnal</button>
+          <button class="tb-btn tb-secondary" onclick="downloadJournalTemplate('GJ')">📋 Template CSV</button>
+          <button class="tb-btn tb-gold" onclick="document.getElementById('csvUploadJU').click()">📥 Upload CSV</button>
+          <input type="file" id="csvUploadJU" class="hidden" accept=".csv,.txt" onchange="journalCsvUpload(this,'GJ')">
+          <button class="tb-btn tb-danger" onclick="deleteAllJournals()">🗑️ Hapus Semua</button>
+          <input class="tb-search" placeholder="🔍 Cari jurnal..." oninput="filterJournal(this.value)" id="journalSearch">
+          <select class="tb-select" onchange="filterJournalMonth(this.value)" id="journalMonthFilter">
+            <option value="">Semua Bulan</option>
+          </select>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-hd">
+            <div class="tbl-title">Daftar Jurnal</div>
+            <span id="journal-count" class="badge badge-blue">0 entri</span>
+          </div>
+          <div class="tbl-wrap"><table id="t-jurnal">
+            <thead><tr><th>Tgl</th><th>No. Voucher</th><th>Keterangan</th><th>Akun</th><th class="r">Debit</th><th class="r">Kredit</th><th>Tipe</th><th>Aksi</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── JURNAL PENYESUAIAN ── -->
+      <div id="penyesuaian" class="sec">
+        <div class="sec-hd">Jurnal Penyesuaian</div>
+        <div class="sec-sub">Jurnal akhir periode: akrual, penyusutan, prepaid, dll. Input massal lewat <b>Template CSV</b> → <b>Upload CSV</b> (Tipe otomatis = Penyesuaian).</div>
+        <div class="toolbar">
+          <button class="tb-btn tb-primary" onclick="showModal('modalJournal','ADJ')">✚ Tambah Penyesuaian</button>
+          <button class="tb-btn tb-secondary" onclick="downloadJournalTemplate('ADJ')">📋 Template CSV</button>
+          <button class="tb-btn tb-gold" onclick="document.getElementById('csvUploadADJ').click()">📥 Upload CSV</button>
+          <input type="file" id="csvUploadADJ" class="hidden" accept=".csv,.txt" onchange="journalCsvUpload(this,'ADJ')">
+          <button class="tb-btn tb-danger" onclick="deleteAllAdj()">🗑️ Hapus Semua</button>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-hd"><div class="tbl-title">Daftar Jurnal Penyesuaian</div></div>
+          <div class="tbl-wrap"><table id="t-penyesuaian">
+            <thead><tr><th>Tgl</th><th>No. Voucher</th><th>Keterangan</th><th>Akun</th><th class="r">Debit</th><th class="r">Kredit</th><th>Aksi</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── BUKU BESAR ── -->
+      <div id="bukubesar" class="sec">
+        <div class="sec-hd">Buku Besar</div>
+        <div class="sec-sub">Posting otomatis dari jurnal. Pilih akun untuk melihat detail mutasi.</div>
+        <div class="filter-bar">
+          <span class="fb-label">Pilih Akun:</span>
+          <select class="tb-select" onchange="renderLedger(this.value)" id="ledgerAccSel" style="width:300px">
+            <option value="">— Pilih Akun —</option>
+          </select>
+          <select class="tb-select" onchange="renderLedger(document.getElementById('ledgerAccSel').value)" id="ledgerMonthSel">
+            <option value="">Semua Periode</option>
+          </select>
+          <button class="tb-btn tb-secondary" onclick="exportLedgerXlsx()">⬇ Excel</button>
+          <button class="tb-btn tb-secondary" onclick="exportLedgerCSV(false)">📄 CSV</button>
+          <button class="tb-btn tb-secondary" onclick="exportLedgerCSV(true)">📃 TXT</button>
+        </div>
+        <div class="kpi-row" style="grid-template-columns:repeat(3,1fr)" id="ledger-kpis"></div>
+        <div class="tbl-card">
+          <div class="tbl-hd"><div class="tbl-title" id="ledger-title">Buku Besar</div></div>
+          <div class="tbl-wrap"><table id="t-ledger">
+            <thead><tr><th>Tgl</th><th>No. Voucher</th><th>Keterangan</th><th class="r">Debit</th><th class="r">Kredit</th><th class="r">Saldo</th></tr></thead>
+            <tbody><tr><td colspan="6" style="text-align:center;color:var(--slate);padding:24px">Pilih akun untuk melihat mutasi</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── TRIAL BALANCE ── -->
+      <div id="tb" class="sec">
+        <div class="sec-hd">Trial Balance</div>
+        <div class="sec-sub">Neraca saldo dari seluruh akun. Debit harus sama dengan Kredit.</div>
+        <div class="toolbar">
+          <select class="tb-select" onchange="renderTB()" id="tbPeriodSel"><option value="">Semua Periode</option></select>
+          <button class="tb-btn tb-secondary" onclick="exportTBXlsx()">⬇ Export Excel</button>
+        </div>
+        <div class="kpi-row" style="grid-template-columns:repeat(3,1fr)" id="tb-kpis"></div>
+        <div class="tbl-card">
+          <div class="tbl-hd"><div class="tbl-title">Neraca Saldo</div><span id="tb-balance-badge" class="badge badge-green">Balanced ✓</span></div>
+          <div class="tbl-wrap"><table id="t-tb">
+            <thead><tr><th>Kode</th><th>Nama Akun</th><th>Tipe</th><th class="r">Debit</th><th class="r">Kredit</th><th class="r">Saldo</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── NERACA ── -->
+      <div id="neraca" class="sec">
+        <div class="sec-hd">Laporan Posisi Keuangan (Neraca)</div>
+        <div class="sec-sub">Aset, Kewajiban, dan Ekuitas perusahaan.</div>
+        <div class="toolbar">
+          <select class="tb-select" onchange="renderNeraca()" id="neracaPeriodSel"><option value="">Semua Periode</option></select>
+          <button class="tb-btn tb-secondary" onclick="exportNeracaXlsx()">⬇ Export Excel</button>
+        </div>
+        <div class="tbl-card" id="neraca-output"></div>
+      </div>
+
+      <!-- ── LABA RUGI ── -->
+      <div id="labarugi" class="sec">
+        <div class="sec-hd">Laporan Laba Rugi</div>
+        <div class="sec-sub">Pendapatan, beban, dan profitabilitas perusahaan.</div>
+        <div class="toolbar">
+          <select class="tb-select" onchange="renderLR()" id="lrPeriodSel"><option value="">Semua Periode</option></select>
+          <button class="tb-btn tb-secondary" onclick="exportLRXlsx()">⬇ Export Excel</button>
+        </div>
+        <div class="tbl-card" id="lr-output"></div>
+      </div>
+
+      <!-- ── ARUS KAS ── -->
+      <div id="aruskas" class="sec">
+        <div class="sec-hd">Laporan Arus Kas</div>
+        <div class="sec-sub">Pergerakan kas dari aktivitas operasi, investasi, dan pendanaan.</div>
+        <div class="toolbar">
+          <select class="tb-select" onchange="renderAK()" id="akPeriodSel"><option value="">Semua Periode</option></select>
+          <button class="tb-btn tb-secondary" onclick="exportAKXlsx()">⬇ Export Excel</button>
+        </div>
+        <div class="tbl-card" id="ak-output"></div>
+      </div>
+
+      <!-- ── RASIO KEUANGAN ── -->
+      <div id="rasio" class="sec">
+        <div class="sec-hd">Dashboard Rasio Keuangan</div>
+        <div class="sec-sub">Analisis profitabilitas, likuiditas, dan solvabilitas perusahaan.</div>
+        <div class="toolbar">
+          <select class="tb-select" onchange="renderRatios()" id="rasioPeriodSel"><option value="">Semua Periode</option></select>
+          <button class="tb-btn tb-secondary" onclick="exportRatiosCSV()">⬇ Export CSV</button>
+        </div>
+
+        <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--green);margin:8px 0 10px">💰 Profitabilitas</div>
+        <div class="kpi-row" id="ratio-profit"></div>
+
+        <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--blue);margin:14px 0 10px">💧 Likuiditas</div>
+        <div class="kpi-row" id="ratio-liquid"></div>
+
+        <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--red);margin:14px 0 10px">🏛️ Solvabilitas</div>
+        <div class="kpi-row" id="ratio-solva"></div>
+
+        <div class="chart-grid cg-2" style="margin-top:18px">
+          <div class="cc">
+            <div class="cc-hd"><div><div class="cc-title">Struktur Modal</div><div class="cc-sub">Kewajiban vs Ekuitas</div></div></div>
+            <canvas id="c-ratio-struct"></canvas>
+          </div>
+          <div class="cc">
+            <div class="cc-hd"><div><div class="cc-title">Komposisi Aset</div><div class="cc-sub">Lancar vs Tidak Lancar</div></div></div>
+            <canvas id="c-ratio-aset"></canvas>
+          </div>
+        </div>
+
+        <div class="tbl-card" style="margin-top:6px">
+          <div class="tbl-hd"><div class="tbl-title">Interpretasi Rasio</div></div>
+          <div class="tbl-wrap"><table id="t-ratio-interp">
+            <thead><tr><th>Rasio</th><th class="r">Nilai</th><th>Interpretasi</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── KOMPARATIF 2 PERIODE ── -->
+      <div id="komparatif" class="sec">
+        <div class="sec-hd">Laporan Komparatif 2 Periode</div>
+        <div class="sec-sub">Bandingkan kinerja & posisi keuangan antar dua tahun buku, lengkap dengan selisih nominal dan persentase.</div>
+        <div class="toolbar">
+          <span style="font-size:12px;color:var(--slate)">Periode A</span>
+          <select class="tb-select" id="kompA" onchange="renderKomparatif()"></select>
+          <span style="font-size:12px;color:var(--slate)">Periode B</span>
+          <select class="tb-select" id="kompB" onchange="renderKomparatif()"></select>
+          <button class="tb-btn tb-secondary" onclick="renderKomparatif()">↻ Bandingkan</button>
+        </div>
+        <div id="komparatif-output"></div>
+      </div>
+
+      <!-- ── SALDO AWAL (OPENING BALANCE) ── -->
+      <div id="saldoawal" class="sec">
+        <div class="sec-hd">Saldo Awal Otomatis (Opening Balance)</div>
+        <div class="sec-sub">Membawa saldo akhir akun riil (Aset, Kewajiban, Ekuitas) dari tahun lama menjadi saldo awal tahun baru. Laba tahun lama otomatis digulung ke Laba Ditahan; akun pendapatan & beban di-nol-kan.</div>
+        <div class="chart-grid cg-2">
+          <div class="cc">
+            <div class="cc-hd"><div><div class="cc-title">Buat Jurnal Pembukaan</div><div class="cc-sub">Pilih tahun asal → tahun tujuan</div></div></div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+              <span style="font-size:12px;color:var(--slate)">Dari tahun</span>
+              <select class="tb-select" id="obFromYear"></select>
+              <span style="font-size:16px;color:var(--gold)">→</span>
+              <span style="font-size:12px;color:var(--slate)">Ke tahun</span>
+              <select class="tb-select" id="obToYear"></select>
+            </div>
+            <button class="tb-btn" style="background:var(--gold);color:var(--coal)" onclick="generateOpeningBalance(document.getElementById('obFromYear').value, document.getElementById('obToYear').value)">🔄 Generate Saldo Awal</button>
+            <div style="font-size:11px;color:var(--slate);margin-top:12px;line-height:1.6">
+              💡 Setelah dibuat, pilih tab <b>Tahun</b> tujuan di bar atas — Neraca tahun itu akan otomatis seimbang karena memuat posisi pembukaan. Jurnal saldo awal (tipe <b>OB</b>) tidak ikut dihitung di tampilan "Semua" agar tidak dobel.
+            </div>
+          </div>
+          <div class="cc">
+            <div class="cc-hd"><div><div class="cc-title">Jurnal Saldo Awal Tersimpan</div><div class="cc-sub">Perusahaan aktif</div></div></div>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Tanggal</th><th>Voucher</th><th class="r">Nilai</th><th>Aksi</th></tr></thead>
+              <tbody id="ob-list"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COA ── -->
+      <div id="coa" class="sec">
+        <div class="sec-hd">Chart of Accounts</div>
+        <div class="sec-sub">Kelola daftar akun. Import massal lewat <b>Template CSV</b> → <b>Upload CSV</b>. Setiap akun bisa di-<b>Edit</b> & <b>Hapus</b>.</div>
+        <div class="toolbar">
+          <button class="tb-btn tb-primary" onclick="showModal('modalCOA')">✚ Tambah Akun</button>
+          <button class="tb-btn tb-secondary" onclick="downloadCOATemplate()">📋 Template CSV</button>
+          <button class="tb-btn tb-gold" onclick="document.getElementById('csvUploadCOA').click()">📥 Upload CSV</button>
+          <input type="file" id="csvUploadCOA" class="hidden" accept=".csv,.txt" onchange="handleCOACsvUpload(this)">
+          <button class="tb-btn tb-danger" onclick="deleteAllCOA()">🗑️ Hapus Semua Akun</button>
+          <input class="tb-search" placeholder="🔍 Cari akun..." oninput="filterCOA(this.value)">
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-hd"><div class="tbl-title">Daftar Akun</div><span id="coa-count" class="badge badge-blue">0 akun</span></div>
+          <div class="tbl-wrap"><table id="t-coa">
+            <thead><tr><th>Kode</th><th>Nama Akun</th><th>Tipe</th><th>Sub-Tipe</th><th>Normal</th><th>Aksi</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ── PERUSAHAAN ── -->
+      <div id="perusahaan" class="sec">
+        <div class="sec-hd">Manajemen Perusahaan</div>
+        <div class="sec-sub">Kelola daftar perusahaan / klien yang diinput dalam sistem ini.</div>
+        <div class="toolbar">
+          <button class="tb-btn tb-primary" onclick="showModal('modalCompany')">✚ Tambah Perusahaan</button>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-hd"><div class="tbl-title">Daftar Perusahaan</div></div>
+          <div class="tbl-wrap"><table id="t-companies">
+            <thead><tr><th>Nama Perusahaan</th><th>NPWP</th><th>Periode Fiskal</th><th>Mata Uang</th><th>Jumlah Jurnal</th><th>Aksi</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /wrap -->
+  <div class="statusbar"><div class="sb-dot"></div><span id="statusTxt">Sistem siap.</span></div>
+</div><!-- /app -->
+
+<!-- ══ MODALS ══ -->
+
+<!-- Journal Modal -->
+<div class="modal-bg" id="modalJournal">
+  <div class="modal" style="width:720px">
+    <div class="modal-hd">
+      <div class="modal-title" id="modalJournalTitle">✚ Jurnal Baru</div>
+      <button class="modal-close" onclick="closeModal('modalJournal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="form-group">
+          <label>Tanggal</label>
+          <input type="date" id="j-date">
+        </div>
+        <div class="form-group">
+          <label>No. Voucher</label>
+          <input type="text" id="j-voucher" placeholder="Otomatis atau isi manual">
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>Keterangan</label>
+          <input type="text" id="j-desc" placeholder="Deskripsi transaksi...">
+        </div>
+        <div class="form-group">
+          <label>Tipe Jurnal</label>
+          <select id="j-type">
+            <option value="GJ">Jurnal Umum</option>
+            <option value="ADJ">Jurnal Penyesuaian</option>
+            <option value="CL">Jurnal Penutup</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Referensi</label>
+          <input type="text" id="j-ref" placeholder="No. Invoice / Dokumen">
+        </div>
+      </div>
+      <div class="je-lines">
+        <div class="je-line-hd">
+          <span>Akun</span><span>Keterangan</span><span style="text-align:right">Debit</span><span style="text-align:right">Kredit</span><span></span>
+        </div>
+        <div id="je-lines-container"></div>
+        <button class="je-add-line" onclick="addJELine()">+ Tambah Baris</button>
+        <div class="je-total">
+          <span></span><span style="font-size:11px;color:var(--slate)">TOTAL</span>
+          <span id="je-total-dr">0</span><span id="je-total-cr">0</span><span></span>
+        </div>
+      </div>
+      <div class="je-balance" id="je-balance">✓ Balanced</div>
+      <div class="modal-footer">
+        <button class="tb-btn tb-secondary" onclick="closeModal('modalJournal')">Batal</button>
+        <button class="tb-btn tb-success" onclick="saveJournal()">💾 Simpan Jurnal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COA Modal -->
+<div class="modal-bg" id="modalCOA">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title" id="modalCOATitle">✚ Tambah Akun</div>
+      <button class="modal-close" onclick="closeModal('modalCOA')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Kode Akun</label>
+          <input type="text" id="coa-code" placeholder="mis. 1110.01">
+        </div>
+        <div class="form-group">
+          <label>Nama Akun</label>
+          <input type="text" id="coa-name" placeholder="mis. Kas Kecil">
+        </div>
+        <div class="form-group">
+          <label>Tipe Akun</label>
+          <select id="coa-type" onchange="updateCOASubtype()">
+            <option value="Aset">Aset</option>
+            <option value="Kewajiban">Kewajiban</option>
+            <option value="Ekuitas">Ekuitas</option>
+            <option value="Pendapatan">Pendapatan</option>
+            <option value="Beban">Beban</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Sub-Tipe</label>
+          <select id="coa-subtype">
+            <option value="Aset Lancar">Aset Lancar</option>
+            <option value="Aset Tidak Lancar">Aset Tidak Lancar</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Saldo Normal</label>
+          <select id="coa-normal">
+            <option value="D">Debit</option>
+            <option value="K">Kredit</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kode Arus Kas</label>
+          <select id="coa-cf">
+            <option value="">— Tidak Ada —</option>
+            <option value="CFO">Operasi (CFO)</option>
+            <option value="CFI">Investasi (CFI)</option>
+            <option value="CFF">Pendanaan (CFF)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="tb-btn tb-secondary" onclick="closeModal('modalCOA')">Batal</button>
+        <button class="tb-btn tb-success" onclick="saveCOA()">💾 Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Company Modal -->
+<div class="modal-bg" id="modalCompany">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">🏢 Tambah Perusahaan</div>
+      <button class="modal-close" onclick="closeModal('modalCompany')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:span 2">
+          <label>Nama Perusahaan</label>
+          <input type="text" id="co-name" placeholder="PT ...">
+        </div>
+        <div class="form-group">
+          <label>NPWP</label>
+          <input type="text" id="co-npwp" placeholder="00.000.000.0-000.000">
+        </div>
+        <div class="form-group">
+          <label>Mata Uang</label>
+          <select id="co-currency">
+            <option value="IDR">IDR — Rupiah</option>
+            <option value="USD">USD — Dollar</option>
+            <option value="SGD">SGD — Singapore Dollar</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Periode Fiskal</label>
+          <select id="co-fiscal">
+            <option value="JAN-DES">Januari — Desember</option>
+            <option value="APR-MAR">April — Maret</option>
+            <option value="JUL-JUN">Juli — Juni</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Industri</label>
+          <select id="co-industry">
+            <option value="Mining">Pertambangan</option>
+            <option value="Trading">Perdagangan</option>
+            <option value="Services">Jasa</option>
+            <option value="Manufacturing">Manufaktur</option>
+            <option value="Property">Properti</option>
+            <option value="Other">Lainnya</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="tb-btn tb-secondary" onclick="closeModal('modalCompany')">Batal</button>
+        <button class="tb-btn tb-success" onclick="saveCompany()">💾 Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ══ MODAL LAPORAN IMPOR ══ -->
+<div class="modal-bg" id="modalImport">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">📋 Laporan Hasil Impor</div>
+      <button class="modal-close" onclick="closeModal('modalImport')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="import-report-body"></div>
+      <div class="modal-footer">
+        <button class="tb-btn tb-secondary" onclick="closeModal('modalImport');gotoTB()">Lihat Trial Balance</button>
+        <button class="tb-btn tb-success" onclick="closeModal('modalImport')">Selesai</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let DB = {
+  companies: [],       // [{id, name, npwp, currency, fiscal, industry}]
+  coa: {},             // {coId: [{code, name, type, subtype, normal, cf}]}
+  journals: {},        // {coId: [{id, date, voucher, desc, type, ref, lines:[{acc,desc,dr,cr}]}]}
+  activeCoId: null,
+};
+
+const CHART_COLORS = ['#c9a84c','#1a2332','#2d6a4f','#b5282b','#1e40af','#7c3aed','#065f46','#92400e'];
+let chartInstances = {};
+
+// ── DEFAULT COA (PT CAL template) ──
+// ── COA PER INDUSTRI ──
+const COA_BY_INDUSTRY = {
+  Mining: [
+    // ASET LANCAR
+    {code:'1110.01',name:'Kas Kecil',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1110.02',name:'Kas Besar',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1210.01',name:'Bank - Rekening Operasional',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1310.03',name:'Piutang Usaha Mining',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1310.06',name:'Piutang Pemegang Saham',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:''},
+    {code:'1410.01',name:'Persediaan Bahan Bakar (Solar)',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1410.02',name:'Persediaan Sparepart Alat Berat',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1510.03',name:'Uang Muka Hauling',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFI'},
+    {code:'1510.04',name:'Uang Muka Eksplorasi',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFI'},
+    {code:'1610.00',name:'Pajak Dibayar Dimuka (PPh 22)',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    // ASET TIDAK LANCAR
+    {code:'1710.05',name:'Aset Tetap - Inventaris Kantor',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.06',name:'Aset Tetap - Alat Berat',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.07',name:'Aset Tetap - Kendaraan',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.09',name:'Penyertaan Saham',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.10',name:'Investasi - Pinjaman Konversi Ekuitas',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1720.00',name:'Biaya Eksplorasi & Pengembangan',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1790.00',name:'Akumulasi Depresiasi Aset Tetap',type:'Aset',subtype:'Aset Tidak Lancar',normal:'K',cf:''},
+    // KEWAJIBAN
+    {code:'2110.00',name:'Utang Usaha - Kontraktor',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2130.01',name:'Utang Pemegang Saham',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFF'},
+    {code:'2210.03',name:'Utang Pajak Pasal 21',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.05',name:'Utang Pajak Pasal 23',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.10',name:'Utang Royalti Pertambangan',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2410.04',name:'Beban Akrual Jasa Angkut (Hauling)',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2510.00',name:'Utang Bank Jangka Panjang',type:'Kewajiban',subtype:'Kewajiban Tidak Lancar',normal:'K',cf:'CFF'},
+    // EKUITAS
+    {code:'3110.01',name:'Modal Disetor - Pemegang Saham A',type:'Ekuitas',subtype:'Modal',normal:'K',cf:'CFF'},
+    {code:'3110.02',name:'Modal Disetor - Pemegang Saham B',type:'Ekuitas',subtype:'Modal',normal:'K',cf:'CFF'},
+    {code:'3210.00',name:'Laba Ditahan',type:'Ekuitas',subtype:'Laba Ditahan',normal:'K',cf:''},
+    // PENDAPATAN
+    {code:'4110.01',name:'Pendapatan Penjualan Batubara',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4110.06',name:'Pendapatan Mining Management Fee',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4120.00',name:'Pendapatan Lain-lain',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFO'},
+    {code:'7720.00',name:'Pendapatan Bunga Bank',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFI'},
+    // BEBAN
+    {code:'5110.00',name:'Biaya Solar Alat Berat',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5120.00',name:'Biaya Hauling & Transportasi',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5130.00',name:'Biaya Royalti & PNBP',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5140.00',name:'Biaya Reklamasi & Pasca Tambang',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5150.00',name:'Biaya Gaji Tenaga Tambang',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'6510.02',name:'Beban Gaji & Tunjangan Kantor',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.08',name:'Beban Administrasi Bank',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.11',name:'Beban Perjalanan Dinas',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.17',name:'Biaya Materai & Perizinan',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6610.03',name:'Beban Penyusutan Alat Berat',type:'Beban',subtype:'Penyusutan & Amortisasi',normal:'D',cf:''},
+    {code:'6610.04',name:'Beban Penyusutan Inventaris',type:'Beban',subtype:'Penyusutan & Amortisasi',normal:'D',cf:''},
+    {code:'7760.00',name:'Beban Bunga Pinjaman',type:'Beban',subtype:'Beban Lain',normal:'D',cf:'CFO'},
+    {code:'8100.00',name:'Beban Pajak Final',type:'Beban',subtype:'Beban Pajak',normal:'D',cf:'CFO'},
+  ],
+  Trading: [
+    {code:'1110.01',name:'Kas Kecil',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1210.01',name:'Bank - Rekening Operasional',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1310.01',name:'Piutang Dagang',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1310.02',name:'Piutang Lain-lain',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1410.01',name:'Persediaan Barang Dagang',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1410.02',name:'Persediaan Barang dalam Perjalanan',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1510.01',name:'Uang Muka Pembelian',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1610.00',name:'Pajak Dibayar Dimuka (PPN)',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1710.05',name:'Aset Tetap - Inventaris Kantor',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.07',name:'Aset Tetap - Kendaraan',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1790.00',name:'Akumulasi Depresiasi',type:'Aset',subtype:'Aset Tidak Lancar',normal:'K',cf:''},
+    {code:'2110.00',name:'Utang Dagang',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2120.00',name:'Utang Uang Muka Penjualan',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.03',name:'Utang Pajak Pasal 21',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.11',name:'Utang PPN',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2510.00',name:'Utang Bank Jangka Panjang',type:'Kewajiban',subtype:'Kewajiban Tidak Lancar',normal:'K',cf:'CFF'},
+    {code:'3110.01',name:'Modal Disetor',type:'Ekuitas',subtype:'Modal',normal:'K',cf:'CFF'},
+    {code:'3210.00',name:'Laba Ditahan',type:'Ekuitas',subtype:'Laba Ditahan',normal:'K',cf:''},
+    {code:'4110.01',name:'Penjualan Barang Dagang',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4110.02',name:'Retur & Potongan Penjualan',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'D',cf:'CFO'},
+    {code:'4120.00',name:'Pendapatan Lain-lain',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFO'},
+    {code:'7720.00',name:'Pendapatan Bunga Bank',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFI'},
+    {code:'5110.00',name:'Harga Pokok Penjualan (HPP)',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5120.00',name:'Biaya Pengiriman & Logistik',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'6110.00',name:'Beban Penjualan & Marketing',type:'Beban',subtype:'Beban Penjualan',normal:'D',cf:'CFO'},
+    {code:'6510.02',name:'Beban Gaji & Tunjangan',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.08',name:'Beban Administrasi Bank',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.11',name:'Beban Perjalanan Dinas',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6610.04',name:'Beban Penyusutan Aset',type:'Beban',subtype:'Penyusutan & Amortisasi',normal:'D',cf:''},
+    {code:'7760.00',name:'Beban Bunga Pinjaman',type:'Beban',subtype:'Beban Lain',normal:'D',cf:'CFO'},
+    {code:'8100.00',name:'Beban Pajak Penghasilan',type:'Beban',subtype:'Beban Pajak',normal:'D',cf:'CFO'},
+  ],
+  Services: [
+    {code:'1110.01',name:'Kas Kecil',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1210.01',name:'Bank - Rekening Operasional',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1310.01',name:'Piutang Jasa',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1510.01',name:'Uang Muka Proyek',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1510.02',name:'Biaya Dibayar Dimuka (Sewa, Asuransi)',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1610.00',name:'Pajak Dibayar Dimuka',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1710.05',name:'Aset Tetap - Inventaris Kantor',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.06',name:'Aset Tetap - Peralatan Teknis',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.07',name:'Aset Tetap - Kendaraan',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1730.00',name:'Aset Tidak Berwujud - Software/Lisensi',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1790.00',name:'Akumulasi Depresiasi',type:'Aset',subtype:'Aset Tidak Lancar',normal:'K',cf:''},
+    {code:'2110.00',name:'Utang Usaha',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2120.00',name:'Pendapatan Diterima Dimuka',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.03',name:'Utang Pajak Pasal 21',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.05',name:'Utang Pajak Pasal 23',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2410.00',name:'Beban Akrual (Gaji, Lembur)',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2510.00',name:'Utang Jangka Panjang',type:'Kewajiban',subtype:'Kewajiban Tidak Lancar',normal:'K',cf:'CFF'},
+    {code:'3110.01',name:'Modal Disetor',type:'Ekuitas',subtype:'Modal',normal:'K',cf:'CFF'},
+    {code:'3210.00',name:'Laba Ditahan',type:'Ekuitas',subtype:'Laba Ditahan',normal:'K',cf:''},
+    {code:'4110.01',name:'Pendapatan Jasa Konsultasi',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4110.02',name:'Pendapatan Proyek & Kontrak',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4110.03',name:'Pendapatan Retainer Fee',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4120.00',name:'Pendapatan Lain-lain',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFO'},
+    {code:'7720.00',name:'Pendapatan Bunga Bank',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFI'},
+    {code:'5110.00',name:'Biaya Langsung Proyek (Subkontraktor)',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5120.00',name:'Biaya Gaji Tenaga Ahli (Billable)',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'6510.02',name:'Beban Gaji & Tunjangan (Non-Billable)',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.05',name:'Beban Sewa Kantor',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.08',name:'Beban Administrasi Bank',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.11',name:'Beban Perjalanan Dinas',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6610.03',name:'Beban Penyusutan & Amortisasi',type:'Beban',subtype:'Penyusutan & Amortisasi',normal:'D',cf:''},
+    {code:'7760.00',name:'Beban Bunga',type:'Beban',subtype:'Beban Lain',normal:'D',cf:'CFO'},
+    {code:'8100.00',name:'Beban Pajak Penghasilan',type:'Beban',subtype:'Beban Pajak',normal:'D',cf:'CFO'},
+  ],
+  Manufacturing: [
+    {code:'1110.01',name:'Kas Kecil',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1210.01',name:'Bank - Rekening Operasional',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1310.01',name:'Piutang Usaha',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1410.01',name:'Persediaan Bahan Baku',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1410.02',name:'Persediaan Barang Dalam Proses (WIP)',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1410.03',name:'Persediaan Barang Jadi',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1410.04',name:'Persediaan Sparepart Mesin',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1510.01',name:'Uang Muka Pembelian Bahan Baku',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1610.00',name:'Pajak Dibayar Dimuka (PPN Masukan)',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1710.01',name:'Aset Tetap - Tanah',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.02',name:'Aset Tetap - Bangunan Pabrik',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.03',name:'Aset Tetap - Mesin & Peralatan',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.05',name:'Aset Tetap - Inventaris Kantor',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.07',name:'Aset Tetap - Kendaraan',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1790.00',name:'Akumulasi Depresiasi Aset Tetap',type:'Aset',subtype:'Aset Tidak Lancar',normal:'K',cf:''},
+    {code:'2110.00',name:'Utang Dagang - Bahan Baku',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.03',name:'Utang Pajak Pasal 21',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.11',name:'Utang PPN Keluaran',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2410.00',name:'Beban Akrual Produksi',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2510.00',name:'Utang Bank Jangka Panjang',type:'Kewajiban',subtype:'Kewajiban Tidak Lancar',normal:'K',cf:'CFF'},
+    {code:'3110.01',name:'Modal Disetor',type:'Ekuitas',subtype:'Modal',normal:'K',cf:'CFF'},
+    {code:'3210.00',name:'Laba Ditahan',type:'Ekuitas',subtype:'Laba Ditahan',normal:'K',cf:''},
+    {code:'4110.01',name:'Penjualan Barang Jadi',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4110.02',name:'Retur Penjualan',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'D',cf:'CFO'},
+    {code:'4120.00',name:'Pendapatan Lain-lain',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFO'},
+    {code:'7720.00',name:'Pendapatan Bunga Bank',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFI'},
+    {code:'5110.00',name:'Biaya Bahan Baku',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5120.00',name:'Biaya Tenaga Kerja Langsung',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5130.00',name:'Biaya Overhead Pabrik (BOP)',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5140.00',name:'Biaya Energi & Utilitas Pabrik',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'6110.00',name:'Beban Penjualan & Distribusi',type:'Beban',subtype:'Beban Penjualan',normal:'D',cf:'CFO'},
+    {code:'6510.02',name:'Beban Gaji & Tunjangan Kantor',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.08',name:'Beban Administrasi Bank',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6610.03',name:'Beban Penyusutan Mesin & Pabrik',type:'Beban',subtype:'Penyusutan & Amortisasi',normal:'D',cf:''},
+    {code:'6610.04',name:'Beban Penyusutan Inventaris',type:'Beban',subtype:'Penyusutan & Amortisasi',normal:'D',cf:''},
+    {code:'7760.00',name:'Beban Bunga Pinjaman',type:'Beban',subtype:'Beban Lain',normal:'D',cf:'CFO'},
+    {code:'8100.00',name:'Beban Pajak Penghasilan',type:'Beban',subtype:'Beban Pajak',normal:'D',cf:'CFO'},
+  ],
+  Property: [
+    {code:'1110.01',name:'Kas Kecil',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1210.01',name:'Bank - Rekening Operasional',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1310.01',name:'Piutang Pembeli Properti',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1410.01',name:'Persediaan Properti Siap Jual',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1410.02',name:'Properti dalam Pengembangan',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1510.01',name:'Uang Muka Pembelian Tanah',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFI'},
+    {code:'1610.00',name:'Pajak Dibayar Dimuka (BPHTB, PPN)',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1710.01',name:'Aset Tetap - Tanah Bank',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.02',name:'Aset Tetap - Bangunan Komersial',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1710.05',name:'Aset Tetap - Inventaris Kantor',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1720.00',name:'Investasi Properti',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1790.00',name:'Akumulasi Depresiasi',type:'Aset',subtype:'Aset Tidak Lancar',normal:'K',cf:''},
+    {code:'2110.00',name:'Utang Kontraktor Pembangunan',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2120.00',name:'Uang Muka Pembeli (DP)',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.03',name:'Utang Pajak Pasal 21',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.06',name:'Utang PPh Final (Pengalihan Hak)',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2510.00',name:'KPR / Utang Bank Pembangunan',type:'Kewajiban',subtype:'Kewajiban Tidak Lancar',normal:'K',cf:'CFF'},
+    {code:'3110.01',name:'Modal Disetor',type:'Ekuitas',subtype:'Modal',normal:'K',cf:'CFF'},
+    {code:'3210.00',name:'Laba Ditahan',type:'Ekuitas',subtype:'Laba Ditahan',normal:'K',cf:''},
+    {code:'4110.01',name:'Pendapatan Penjualan Properti',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4110.02',name:'Pendapatan Sewa Properti',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4110.03',name:'Pendapatan Service Charge',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4120.00',name:'Pendapatan Lain-lain',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFO'},
+    {code:'7720.00',name:'Pendapatan Bunga Bank',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFI'},
+    {code:'5110.00',name:'Biaya Konstruksi & Pembangunan',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5120.00',name:'Biaya Pembelian Tanah',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'5130.00',name:'Biaya Perizinan & Sertifikasi',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'6110.00',name:'Beban Marketing & Pemasaran',type:'Beban',subtype:'Beban Penjualan',normal:'D',cf:'CFO'},
+    {code:'6510.02',name:'Beban Gaji & Tunjangan',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.05',name:'Beban Sewa Kantor',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.08',name:'Beban Administrasi Bank',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6610.04',name:'Beban Penyusutan Bangunan & Inventaris',type:'Beban',subtype:'Penyusutan & Amortisasi',normal:'D',cf:''},
+    {code:'7760.00',name:'Beban Bunga KPR / Pinjaman',type:'Beban',subtype:'Beban Lain',normal:'D',cf:'CFO'},
+    {code:'8100.00',name:'Beban Pajak Final',type:'Beban',subtype:'Beban Pajak',normal:'D',cf:'CFO'},
+  ],
+  Other: [
+    {code:'1110.01',name:'Kas Kecil',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1210.01',name:'Bank',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1310.01',name:'Piutang Usaha',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1410.00',name:'Persediaan',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+    {code:'1710.05',name:'Aset Tetap',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+    {code:'1790.00',name:'Akumulasi Depresiasi',type:'Aset',subtype:'Aset Tidak Lancar',normal:'K',cf:''},
+    {code:'2110.00',name:'Utang Usaha',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2210.03',name:'Utang Pajak',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+    {code:'2510.00',name:'Utang Jangka Panjang',type:'Kewajiban',subtype:'Kewajiban Tidak Lancar',normal:'K',cf:'CFF'},
+    {code:'3110.01',name:'Modal Disetor',type:'Ekuitas',subtype:'Modal',normal:'K',cf:'CFF'},
+    {code:'3210.00',name:'Laba Ditahan',type:'Ekuitas',subtype:'Laba Ditahan',normal:'K',cf:''},
+    {code:'4110.01',name:'Pendapatan Usaha',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+    {code:'4120.00',name:'Pendapatan Lain-lain',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFO'},
+    {code:'7720.00',name:'Pendapatan Bunga Bank',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFI'},
+    {code:'5110.00',name:'Harga Pokok',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+    {code:'6510.02',name:'Beban Gaji & Tunjangan',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6510.08',name:'Beban Administrasi Bank',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+    {code:'6610.04',name:'Beban Penyusutan',type:'Beban',subtype:'Penyusutan & Amortisasi',normal:'D',cf:''},
+    {code:'7760.00',name:'Beban Bunga',type:'Beban',subtype:'Beban Lain',normal:'D',cf:'CFO'},
+    {code:'8100.00',name:'Beban Pajak',type:'Beban',subtype:'Beban Pajak',normal:'D',cf:'CFO'},
+  ],
+};
+
+// Backward compat
+const DEFAULT_COA = COA_BY_INDUSTRY.Mining;
+
+function getCOAForIndustry(industry) {
+  return JSON.parse(JSON.stringify(COA_BY_INDUSTRY[industry] || COA_BY_INDUSTRY.Other));
+}
+
+const DEFAULT_COA_ORIG = [
+  {code:'1110.01',name:'Kas Kecil',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+  {code:'1110.02',name:'Kas Besar',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+  {code:'1210.01',name:'Bank Mandiri Giro',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+  {code:'1210.02',name:'Bank BRI',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+  {code:'1310.03',name:'Piutang Usaha',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+  {code:'1310.06',name:'Piutang Pemegang Saham',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:''},
+  {code:'1410.00',name:'Persediaan Sparepart',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+  {code:'1510.03',name:'Uang Muka Hauling',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFI'},
+  {code:'1610.00',name:'Pajak Dibayar Dimuka',type:'Aset',subtype:'Aset Lancar',normal:'D',cf:'CFO'},
+  {code:'1710.05',name:'Aset Tetap Inventaris Kantor',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+  {code:'1710.09',name:'Penyertaan Saham PT BSS',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+  {code:'1710.10',name:'Investasi - Pinjaman Konversi Ekuitas',type:'Aset',subtype:'Aset Tidak Lancar',normal:'D',cf:'CFI'},
+  {code:'1790.00',name:'Akumulasi Depresiasi',type:'Aset',subtype:'Aset Tidak Lancar',normal:'K',cf:''},
+  {code:'2110.00',name:'Utang Usaha',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+  {code:'2130.01',name:'Utang PT AARC',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFF'},
+  {code:'2210.03',name:'Utang Pajak Pasal 21',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+  {code:'2210.05',name:'Utang Pajak Pasal 23',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+  {code:'2410.04',name:'Beban Akrual Jasa Angkut',type:'Kewajiban',subtype:'Kewajiban Lancar',normal:'K',cf:'CFO'},
+  {code:'2510.00',name:'Utang Bank Jangka Panjang',type:'Kewajiban',subtype:'Kewajiban Tidak Lancar',normal:'K',cf:'CFF'},
+  {code:'3110.01',name:'Modal Disetor PT AARC',type:'Ekuitas',subtype:'Modal',normal:'K',cf:'CFF'},
+  {code:'3110.02',name:'Modal Disetor PT AVI',type:'Ekuitas',subtype:'Modal',normal:'K',cf:'CFF'},
+  {code:'3210.00',name:'Laba Ditahan',type:'Ekuitas',subtype:'Laba Ditahan',normal:'K',cf:''},
+  {code:'4110.01',name:'Pendapatan Jasa Mining',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+  {code:'4110.06',name:'Pendapatan Mining Management',type:'Pendapatan',subtype:'Pendapatan Usaha',normal:'K',cf:'CFO'},
+  {code:'4120.00',name:'Pendapatan Lain-lain',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFO'},
+  {code:'5110.00',name:'Biaya Solar Alat Berat',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+  {code:'5200.00',name:'Biaya Gaji Tenaga Kerja',type:'Beban',subtype:'Beban Pokok',normal:'D',cf:'CFO'},
+  {code:'6510.02',name:'Beban Gaji & Tunjangan',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+  {code:'6510.08',name:'Beban Transfer & Adm Bank',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+  {code:'6510.11',name:'Beban Perjalanan Dinas',type:'Beban',subtype:'Beban Umum & Adm',normal:'D',cf:'CFO'},
+  {code:'6610.03',name:'Beban Penyusutan Peralatan',type:'Beban',subtype:'Penyusutan & Amortisasi',normal:'D',cf:''},
+  {code:'6610.04',name:'Beban Penyusutan Inventaris',type:'Beban',subtype:'Penyusutan & Amortisasi',normal:'D',cf:''},
+  {code:'7720.00',name:'Pendapatan Bunga Bank',type:'Pendapatan',subtype:'Pendapatan Lain',normal:'K',cf:'CFI'},
+  {code:'7760.00',name:'Biaya Bunga Pinjaman',type:'Beban',subtype:'Beban Lain',normal:'D',cf:'CFO'},
+  {code:'8100.00',name:'Beban Pajak Final',type:'Beban',subtype:'Beban Pajak',normal:'D',cf:'CFO'},
+];
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+function initApp() {
+  // load from localStorage
+  const saved = localStorage.getItem('akuntansi_pro_db');
+  if (saved) {
+    try { DB = JSON.parse(saved); } catch(e) {}
+  }
+  // ensure default company
+  if (DB.companies.length === 0) {
+    const id = uid();
+    DB.companies.push({id, name:'PT Citra Artomoro Lestari', npwp:'', currency:'IDR', fiscal:'JAN-DES', industry:'Mining'});
+    DB.coa[id] = getCOAForIndustry('Mining');
+    DB.journals[id] = [];
+    DB.activeCoId = id;
+  }
+  if (!DB.activeCoId) DB.activeCoId = DB.companies[0].id;
+
+  document.getElementById('splash').classList.add('out');
+  document.getElementById('app').classList.add('on');
+
+  refreshAll();
+  toast('Selamat datang di AkunTansi Pro!', 'ok');
+}
+
+function buildYearBar() {
+  const years = availableYears();
+  const bar = document.getElementById('yearBar');
+  if (!bar) return;
+  let html = '<span class="year-bar-label">Tahun Buku</span>';
+  html += `<div class="year-tab ${activeYear===''?'on':''}" onclick="setYear('',this)">Semua</div>`;
+  years.forEach(y=>{
+    html += `<div class="year-tab ${activeYear===y?'on':''}" onclick="setYear('${y}',this)">${y}</div>`;
+  });
+  bar.innerHTML = html;
+}
+
+function refreshAll() {
+  buildYearBar();
+  renderCompanyInfo();
+  renderCOATable();
+  renderJournalTable();
+  renderAdjTable();
+  renderDashboard();
+  renderRatios();
+  renderTB();
+  renderNeraca();
+  renderLR();
+  renderAK();
+  updateBadges();
+  populatePeriodFilters();
+  populateLedgerSel();
+  populateKomparatif();
+  renderSaldoAwal();
+  renderCompanyList();
+  saveDB();
+}
+
+function saveDB() {
+  try { localStorage.setItem('akuntansi_pro_db', JSON.stringify(DB)); }
+  catch(e) {
+    // localStorage hard limit is ~5 MB. When the DB exceeds it the write fails
+    // silently and data appears to "not upload fully" after a refresh.
+    if (!saveDB._warned) {
+      saveDB._warned = true;
+      toast('⚠️ Penyimpanan browser penuh (limit localStorage ±5MB). Klik "💾 Simpan Sesi" untuk backup JSON, lalu pisah data per perusahaan/tahun. Lihat juga tombol "📥 Upload CSV" yang jauh lebih ringan.', 'err');
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════
+// COMPANY
+// ══════════════════════════════════════════════════
+function activeCo() { return DB.companies.find(c=>c.id===DB.activeCoId)||DB.companies[0]; }
+function activeCOA() { return DB.coa[DB.activeCoId]||[]; }
+let activeYear = ''; // '' = semua tahun, '2025', '2026', etc.
+function allJournals() { return DB.journals[DB.activeCoId]||[]; }
+function activeJournals() {
+  const all = DB.journals[DB.activeCoId]||[];
+  // Aggregate ("Semua") view: exclude opening-balance carry-forwards (type 'OB')
+  // so they don't double-count with the real prior-year transactions.
+  if (!activeYear) return all.filter(j => j.type !== 'OB');
+  // Single-year view: include that year's transactions PLUS its OB (dated YYYY-01-01)
+  return all.filter(j => (j.date||'').slice(0,4) === activeYear);
+}
+// Balances for an arbitrary year scope, independent of the global activeYear.
+// scope='' → all real journals (OB excluded); scope='2026' → that year incl. its OB.
+function journalsForScope(scope) {
+  const all = DB.journals[DB.activeCoId]||[];
+  if (!scope) return all.filter(j => j.type !== 'OB');
+  return all.filter(j => (j.date||'').slice(0,4) === String(scope));
+}
+function balancesForScope(scope, uptoMonth) {
+  const bal = {};
+  activeCOA().forEach(a=>{ bal[a.code]={dr:0,cr:0}; });
+  let js = journalsForScope(scope);
+  if (uptoMonth) js = js.filter(j=>(j.date||'').slice(0,7) <= uptoMonth);
+  js.forEach(j=>j.lines.forEach(l=>{
+    if (!bal[l.acc]) bal[l.acc]={dr:0,cr:0};
+    bal[l.acc].dr += l.dr||0; bal[l.acc].cr += l.cr||0;
+  }));
+  return bal;
+}
+// Cumulative balances across ALL real journals (OB excluded), up to a YYYY-MM — used to build opening balances.
+function rawCumulativeBalances(uptoMonth) {
+  const bal = {};
+  activeCOA().forEach(a=>{ bal[a.code]={dr:0,cr:0}; });
+  let js = (DB.journals[DB.activeCoId]||[]).filter(j=>j.type!=='OB');
+  if (uptoMonth) js = js.filter(j=>(j.date||'').slice(0,7) <= uptoMonth);
+  js.forEach(j=>j.lines.forEach(l=>{
+    if (!bal[l.acc]) bal[l.acc]={dr:0,cr:0};
+    bal[l.acc].dr += l.dr||0; bal[l.acc].cr += l.cr||0;
+  }));
+  return bal;
+}
+function availableYears() {
+  const ys = [...new Set(allJournals().map(j=>(j.date||'').slice(0,4)).filter(Boolean))].sort();
+  return ys;
+}
+function setYear(y, el) {
+  activeYear = y;
+  document.querySelectorAll('.year-tab').forEach(t=>t.classList.remove('on'));
+  if (el) el.classList.add('on');
+  refreshAll();
+}
+
+function renderCompanyInfo() {
+  const co = activeCo();
+  if (!co) return;
+  document.getElementById('coName').textContent = co.name;
+  document.getElementById('sbCoName').textContent = co.name;
+  const js = activeJournals();
+  const periods = [...new Set(js.map(j=>j.date.slice(0,7)))].sort();
+  document.getElementById('periodInfo').textContent = periods.length > 0
+    ? periods[0].replace('-','/') + ' – ' + periods[periods.length-1].replace('-','/')
+    : 'Belum ada transaksi';
+}
+
+function toggleCoDrop() {
+  const d = document.getElementById('coDrop');
+  d.classList.toggle('on');
+  // build dropdown
+  d.innerHTML = DB.companies.map(c=>`
+    <div class="co-item ${c.id===DB.activeCoId?'active':''}" onclick="switchCo('${c.id}')">
+      🏢 ${c.name}
+    </div>`).join('') +
+    `<div class="co-add" onclick="showModal('modalCompany');document.getElementById('coDrop').classList.remove('on')">+ Tambah Perusahaan</div>`;
+}
+
+function switchCo(id) {
+  DB.activeCoId = id;
+  document.getElementById('coDrop').classList.remove('on');
+  if (!DB.coa[id]) DB.coa[id] = JSON.parse(JSON.stringify(DEFAULT_COA));
+  if (!DB.journals[id]) DB.journals[id] = [];
+  refreshAll();
+  toast('Beralih ke: ' + activeCo().name, 'info');
+}
+
+function saveCompany() {
+  const name = v('co-name'); if (!name) { toast('Nama perusahaan wajib diisi','err'); return; }
+  const id = uid();
+  DB.companies.push({id, name, npwp:v('co-npwp'), currency:v('co-currency'), fiscal:v('co-fiscal'), industry:v('co-industry')});
+  DB.coa[id] = getCOAForIndustry(v('co-industry'));
+  DB.journals[id] = [];
+  DB.activeCoId = id;
+  closeModal('modalCompany');
+  refreshAll();
+  toast('Perusahaan berhasil ditambahkan!','ok');
+}
+
+function renderCompanyList() {
+  const tb = document.querySelector('#t-companies tbody');
+  tb.innerHTML = DB.companies.map(co => {
+    const jCount = (DB.journals[co.id]||[]).reduce((a,j)=>a+j.lines.length,0);
+    return `<tr>
+      <td><strong>${co.name}</strong></td>
+      <td>${co.npwp||'—'}</td>
+      <td>${co.fiscal}</td>
+      <td>${co.currency}</td>
+      <td>${jCount} baris</td>
+      <td><button class="tb-btn tb-secondary" style="padding:4px 10px;font-size:11px" onclick="switchCo('${co.id}')">Pilih</button>
+          <button class="tb-btn tb-danger" style="padding:4px 10px;font-size:11px" onclick="deleteCompany('${co.id}')">Hapus</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function deleteCompany(id) {
+  if (DB.companies.length === 1) { toast('Minimal 1 perusahaan harus ada','err'); return; }
+  if (!confirm('Hapus perusahaan ini? Semua datanya akan terhapus.')) return;
+  DB.companies = DB.companies.filter(c=>c.id!==id);
+  delete DB.coa[id]; delete DB.journals[id];
+  if (DB.activeCoId===id) DB.activeCoId = DB.companies[0].id;
+  refreshAll(); toast('Perusahaan dihapus','info');
+}
+
+// ══════════════════════════════════════════════════
+// COA
+// ══════════════════════════════════════════════════
+function getCOA(code) { return activeCOA().find(a=>a.code===code); }
+
+const COA_SUBTYPES = {
+  'Aset': ['Aset Lancar','Aset Tidak Lancar'],
+  'Kewajiban': ['Kewajiban Lancar','Kewajiban Tidak Lancar'],
+  'Ekuitas': ['Modal','Laba Ditahan'],
+  'Pendapatan': ['Pendapatan Usaha','Pendapatan Lain'],
+  'Beban': ['Beban Pokok','Beban Umum & Adm','Penyusutan & Amortisasi','Beban Penjualan','Beban Lain','Beban Pajak'],
+};
+
+function updateCOASubtype() {
+  const t = document.getElementById('coa-type').value;
+  const st = document.getElementById('coa-subtype');
+  st.innerHTML = (COA_SUBTYPES[t]||[]).map(s=>`<option value="${s}">${s}</option>`).join('');
+  document.getElementById('coa-normal').value = ['Aset','Beban'].includes(t) ? 'D' : 'K';
+}
+
+function saveCOA() {
+  const code = v('coa-code'), name = v('coa-name');
+  if (!code||!name) { toast('Kode dan nama akun wajib diisi','err'); return; }
+  const list = DB.coa[DB.activeCoId];
+  const entry = {code, name, type:v('coa-type'), subtype:v('coa-subtype'), normal:v('coa-normal'), cf:v('coa-cf')};
+  if (editingCoaCode) {
+    if (code !== editingCoaCode && list.find(a=>a.code===code)) { toast('Kode akun tujuan sudah dipakai','err'); return; }
+    const idx = list.findIndex(a=>a.code===editingCoaCode);
+    if (idx>=0) list[idx] = entry; else list.push(entry);
+    // Jika kode berubah, ikutkan semua baris jurnal agar tidak jadi akun yatim / selisih
+    if (code !== editingCoaCode) {
+      (DB.journals[DB.activeCoId]||[]).forEach(j=>j.lines.forEach(l=>{ if (l.acc===editingCoaCode) l.acc = code; }));
+    }
+    editingCoaCode = null;
+  } else {
+    if (list.find(a=>a.code===code)) { toast('Kode akun sudah ada','err'); return; }
+    list.push(entry);
+  }
+  list.sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+  closeModal('modalCOA'); refreshAll();
+  toast('Akun tersimpan','ok');
+}
+
+function editCOA(code) {
+  const a = getCOA(code); if (!a) { toast('Akun tidak ditemukan','err'); return; }
+  editingCoaCode = code;
+  const t = document.getElementById('modalCOATitle'); if (t) t.textContent = '✏️ Edit Akun';
+  document.getElementById('coa-code').value = a.code;
+  document.getElementById('coa-name').value = a.name;
+  document.getElementById('coa-type').value = a.type;
+  updateCOASubtype();
+  document.getElementById('coa-subtype').value = a.subtype;
+  document.getElementById('coa-normal').value = a.normal;
+  document.getElementById('coa-cf').value = a.cf||'';
+  document.getElementById('modalCOA').classList.add('on');
+}
+
+function deleteAllCOA() {
+  const n = activeCOA().length;
+  if (n===0) { toast('Daftar akun sudah kosong','info'); return; }
+  if (!confirm(`Hapus SEMUA ${n} akun COA untuk ${activeCo().name}?\n\nJurnal TIDAK ikut terhapus, tetapi laporan butuh COA agar akurat.\nDisarankan klik "Simpan Sesi" dulu sebagai backup.\n\nLanjutkan?`)) return;
+  DB.coa[DB.activeCoId] = [];
+  renderCOATable(); populateLedgerSel(); saveDB();
+  toast(`${n} akun dihapus`,'info');
+}
+
+function renderCOATable(filter='') {
+  const coa = activeCOA().filter(a=>
+    !filter || a.code.toLowerCase().includes(filter) || a.name.toLowerCase().includes(filter)
+  );
+  const tb = document.querySelector('#t-coa tbody');
+  tb.innerHTML = coa.map(a=>`<tr>
+    <td><code style="font-size:11px;background:#f1f5f9;padding:2px 6px;border-radius:4px">${a.code}</code></td>
+    <td>${a.name}</td>
+    <td><span class="badge ${typeBadge(a.type)}">${a.type}</span></td>
+    <td style="font-size:11px;color:var(--slate)">${a.subtype}</td>
+    <td><span class="badge ${a.normal==='D'?'badge-blue':'badge-gold'}">${a.normal==='D'?'Debit':'Kredit'}</span></td>
+    <td>
+      <button class="tb-btn tb-secondary" style="padding:3px 8px;font-size:10px" onclick="editCOA('${a.code}')">Edit</button>
+      <button class="tb-btn tb-danger" style="padding:3px 8px;font-size:10px" onclick="deleteCOA('${a.code}')">Hapus</button>
+    </td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--slate)">Belum ada akun</td></tr>';
+  document.getElementById('coa-count').textContent = coa.length + ' akun';
+}
+
+function filterCOA(q) { renderCOATable(q.toLowerCase()); }
+
+function deleteCOA(code) {
+  if (!confirm('Hapus akun ini?')) return;
+  DB.coa[DB.activeCoId] = DB.coa[DB.activeCoId].filter(a=>a.code!==code);
+  renderCOATable(); populateLedgerSel(); saveDB(); toast('Akun dihapus','info');
+}
+
+function typeBadge(t) {
+  return {Aset:'badge-blue',Kewajiban:'badge-red',Ekuitas:'badge-gold',Pendapatan:'badge-green',Beban:'badge-red'}[t]||'badge-blue';
+}
+
+// ══════════════════════════════════════════════════
+// JOURNAL
+// ══════════════════════════════════════════════════
+let currentJEType = 'GJ';
+let jeLines = [];
+let editingJournalId = null;
+let editingCoaCode = null;
+
+function showModal(id, type='GJ') {
+  document.getElementById(id).classList.add('on');
+  if (id==='modalJournal') {
+    currentJEType = type;
+    editingJournalId = null;
+    document.getElementById('modalJournalTitle').textContent = type==='ADJ'?'✚ Jurnal Penyesuaian':'✚ Jurnal Umum';
+    document.getElementById('j-type').value = type;
+    document.getElementById('j-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('j-voucher').value = autoVoucher(type);
+    document.getElementById('j-desc').value = '';
+    document.getElementById('j-ref').value = '';
+    jeLines = [];
+    addJELine(); addJELine();
+    renderJELines();
+  }
+  if (id==='modalCOA') {
+    editingCoaCode = null;
+    const t = document.getElementById('modalCOATitle'); if (t) t.textContent = '✚ Tambah Akun';
+    document.getElementById('coa-code').value='';
+    document.getElementById('coa-name').value='';
+    document.getElementById('coa-type').value='Aset';
+    updateCOASubtype();
+    document.getElementById('coa-cf').value='';
+  }
+  if (id==='modalCompany') {
+    document.getElementById('co-name').value='';
+    document.getElementById('co-npwp').value='';
+  }
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('on'); }
+
+function autoVoucher(type) {
+  const js = activeJournals().filter(j=>j.type===type);
+  const prefix = {GJ:'JU',ADJ:'JP',CL:'JC'}[type]||'JU';
+  return `${prefix}/${String(js.length+1).padStart(4,'0')}/${new Date().getFullYear()}`;
+}
+
+function addJELine() {
+  jeLines.push({acc:'',desc:'',dr:0,cr:0});
+  renderJELines();
+}
+
+function removeJELine(i) {
+  jeLines.splice(i,1);
+  if (jeLines.length===0) addJELine();
+  renderJELines();
+}
+
+function renderJELines() {
+  const con = document.getElementById('je-lines-container');
+  const coaOpts = activeCOA().map(a=>`<option value="${a.code}">${a.code} — ${a.name}</option>`).join('');
+  con.innerHTML = jeLines.map((l,i)=>`
+    <div class="je-line-row">
+      <select onchange="jeLines[${i}].acc=this.value">
+        <option value="">— Pilih Akun —</option>${coaOpts}
+      </select>
+      <input type="text" placeholder="Keterangan..." value="${l.desc}" oninput="jeLines[${i}].desc=this.value">
+      <input type="number" placeholder="0" value="${l.dr||''}" oninput="jeLines[${i}].dr=+this.value||0;updateJETotals()" style="text-align:right">
+      <input type="number" placeholder="0" value="${l.cr||''}" oninput="jeLines[${i}].cr=+this.value||0;updateJETotals()" style="text-align:right">
+      <button class="btn-del-line" onclick="removeJELine(${i})">✕</button>
+    </div>`).join('');
+
+  // restore selections
+  const sels = con.querySelectorAll('select');
+  jeLines.forEach((l,i)=>{ if(sels[i]) sels[i].value = l.acc; });
+  updateJETotals();
+}
+
+function updateJETotals() {
+  const dr = jeLines.reduce((a,l)=>a+(+l.dr||0),0);
+  const cr = jeLines.reduce((a,l)=>a+(+l.cr||0),0);
+  document.getElementById('je-total-dr').textContent = fmt(dr);
+  document.getElementById('je-total-cr').textContent = fmt(cr);
+  const bal = document.getElementById('je-balance');
+  const ok = Math.abs(dr-cr)<0.01;
+  bal.textContent = ok ? `✓ Balanced (${fmt(dr)})` : `✗ Tidak Seimbang — Selisih: ${fmt(Math.abs(dr-cr))}`;
+  bal.className = 'je-balance ' + (ok?'ok':'err');
+}
+
+function saveJournal() {
+  const date = v('j-date'); if (!date) { toast('Tanggal wajib diisi','err'); return; }
+  const lines = jeLines.filter(l=>l.acc && (l.dr>0||l.cr>0));
+  if (lines.length < 2) { toast('Minimal 2 baris akun','err'); return; }
+  const dr = lines.reduce((a,l)=>a+l.dr,0);
+  const cr = lines.reduce((a,l)=>a+l.cr,0);
+  if (Math.abs(dr-cr)>0.01) { toast('Debit dan Kredit tidak seimbang!','err'); return; }
+
+  const entry = {
+    id: editingJournalId || uid(),
+    date, voucher: v('j-voucher')||autoVoucher(v('j-type')),
+    desc: v('j-desc'), type: v('j-type'), ref: v('j-ref'), lines,
+  };
+
+  const js = DB.journals[DB.activeCoId];
+  if (editingJournalId) {
+    const idx = js.findIndex(j=>j.id===editingJournalId);
+    if (idx>=0) js[idx]=entry;
+  } else {
+    js.push(entry);
+  }
+
+  closeModal('modalJournal');
+  refreshAll();
+  toast('Jurnal berhasil disimpan!','ok');
+}
+
+function editJournal(id) {
+  const j = activeJournals().find(x=>x.id===id);
+  if (!j) { toast('Jurnal tidak ditemukan','err'); return; }
+  // Buka modal LANGSUNG tanpa lewat showModal() — showModal() mereset form
+  // (itulah penyebab edit lama "tidak sesuai dengan yang diinput").
+  editingJournalId = id;
+  currentJEType = j.type;
+  document.getElementById('modalJournal').classList.add('on');
+  document.getElementById('modalJournalTitle').textContent = '✏️ Edit Jurnal';
+  document.getElementById('j-date').value = j.date || '';
+  document.getElementById('j-voucher').value = j.voucher || '';
+  document.getElementById('j-desc').value = j.desc || '';
+  document.getElementById('j-type').value = j.type || 'GJ';
+  document.getElementById('j-ref').value = j.ref || '';
+  jeLines = (j.lines||[]).map(l=>({ acc:l.acc||'', desc:l.desc||'', dr:+l.dr||0, cr:+l.cr||0 }));
+  if (jeLines.length < 2) { while (jeLines.length < 2) jeLines.push({acc:'',desc:'',dr:0,cr:0}); }
+  renderJELines();
+}
+
+function deleteJournal(id) {
+  if (!confirm('Hapus jurnal ini?')) return;
+  DB.journals[DB.activeCoId] = activeJournals().filter(j=>j.id!==id);
+  refreshAll(); toast('Jurnal dihapus','info');
+}
+
+function renderJournalTable(filter='', monthFilter='') {
+  let js = activeJournals().filter(j=>j.type!=='ADJ');
+  if (monthFilter) js = js.filter(j=>j.date.startsWith(monthFilter));
+  if (filter) js = js.filter(j=>
+    j.voucher.toLowerCase().includes(filter)||j.desc.toLowerCase().includes(filter)||
+    j.lines.some(l=>l.acc.includes(filter))
+  );
+  js = [...js].sort((a,b)=>b.date.localeCompare(a.date));
+
+  const tb = document.querySelector('#t-jurnal tbody');
+  tb.innerHTML = js.flatMap(j=>j.lines.map((l,li)=>`
+    <tr>
+      <td>${li===0?j.date:''}</td>
+      <td>${li===0?j.voucher:''}</td>
+      <td>${li===0?j.desc:''}</td>
+      <td><code style="font-size:10px;background:#f1f5f9;padding:1px 5px;border-radius:3px">${l.acc}</code> ${accName(l.acc)}</td>
+      <td class="r ${l.dr?'pos':''}">${l.dr?fmt(l.dr):'—'}</td>
+      <td class="r ${l.cr?'neg':''}">${l.cr?fmt(l.cr):'—'}</td>
+      ${li===0?`<td><span class="badge ${j.type==='ADJ'?'badge-gold':'badge-blue'}">${j.type}</span></td>
+        <td>
+          <button class="tb-btn tb-secondary" style="padding:3px 8px;font-size:10px" onclick="editJournal('${j.id}')">Edit</button>
+          <button class="tb-btn tb-danger" style="padding:3px 8px;font-size:10px" onclick="deleteJournal('${j.id}')">Hapus</button>
+        </td>`:`<td></td><td></td>`}
+    </tr>`)).join('') || '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--slate)">Belum ada jurnal</td></tr>';
+
+  document.getElementById('journal-count').textContent = js.length + ' entri';
+}
+
+function renderAdjTable() {
+  const js = activeJournals().filter(j=>j.type==='ADJ').sort((a,b)=>b.date.localeCompare(a.date));
+  const tb = document.querySelector('#t-penyesuaian tbody');
+  tb.innerHTML = js.flatMap(j=>j.lines.map((l,li)=>`
+    <tr>
+      <td>${li===0?j.date:''}</td>
+      <td>${li===0?j.voucher:''}</td>
+      <td>${li===0?j.desc:''}</td>
+      <td>${l.acc} ${accName(l.acc)}</td>
+      <td class="r ${l.dr?'pos':''}">${l.dr?fmt(l.dr):'—'}</td>
+      <td class="r ${l.cr?'neg':''}">${l.cr?fmt(l.cr):'—'}</td>
+      ${li===0?`<td>
+        <button class="tb-btn tb-secondary" style="padding:3px 8px;font-size:10px" onclick="editJournal('${j.id}')">Edit</button>
+        <button class="tb-btn tb-danger" style="padding:3px 8px;font-size:10px" onclick="deleteJournal('${j.id}')">Hapus</button>
+      </td>`:'<td></td>'}
+    </tr>`)).join('') || '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--slate)">Belum ada jurnal penyesuaian</td></tr>';
+}
+
+function filterJournal(q) { renderJournalTable(q.toLowerCase(), document.getElementById('journalMonthFilter').value); }
+function filterJournalMonth(m) { renderJournalTable(document.getElementById('journalSearch').value, m); }
+
+// ══════════════════════════════════════════════════
+// BUKU BESAR
+// ══════════════════════════════════════════════════
+function computeLedger(accCode, monthFilter='') {
+  let js = activeJournals();
+  if (monthFilter) js = js.filter(j=>j.date.startsWith(monthFilter));
+  js = js.sort((a,b)=>a.date.localeCompare(b.date));
+
+  const acc = getCOA(accCode);
+  const normalD = acc && acc.normal==='D';
+  let saldo = 0;
+  const rows = [];
+  js.forEach(j=>{
+    j.lines.filter(l=>l.acc===accCode).forEach(l=>{
+      const net = normalD ? l.dr - l.cr : l.cr - l.dr;
+      saldo += net;
+      rows.push({date:j.date, voucher:j.voucher, desc:l.desc||j.desc, dr:l.dr, cr:l.cr, saldo});
+    });
+  });
+  return {rows, saldo};
+}
+
+function renderLedger(code) {
+  if (!code) return;
+  const monthFilter = document.getElementById('ledgerMonthSel').value;
+  const {rows, saldo} = computeLedger(code, monthFilter);
+  const acc = getCOA(code);
+  document.getElementById('ledger-title').textContent = `Buku Besar — ${code} ${acc?.name||''}`;
+
+  const totalDr = rows.reduce((a,r)=>a+r.dr,0);
+  const totalCr = rows.reduce((a,r)=>a+r.cr,0);
+
+  document.getElementById('ledger-kpis').innerHTML =
+    `<div class="kpi kpi-g"><div class="kpi-lbl">Total Debit</div><div class="kpi-val pos">${fmt(totalDr)}</div></div>` +
+    `<div class="kpi kpi-r"><div class="kpi-lbl">Total Kredit</div><div class="kpi-val neg">${fmt(totalCr)}</div></div>` +
+    `<div class="kpi"><div class="kpi-lbl">Saldo Akhir</div><div class="kpi-val">${fmt(saldo)}</div><div class="kpi-meta">${acc?.normal==='D'?'Normal Debit':'Normal Kredit'}</div></div>`;
+
+  const tb = document.querySelector('#t-ledger tbody');
+  if (rows.length===0) { tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--slate)">Tidak ada mutasi pada periode ini</td></tr>'; return; }
+
+  tb.innerHTML = rows.map(r=>`<tr>
+    <td>${r.date}</td><td>${r.voucher}</td><td>${r.desc}</td>
+    <td class="r ${r.dr?'pos':''}">${r.dr?fmt(r.dr):'—'}</td>
+    <td class="r ${r.cr?'neg':''}">${r.cr?fmt(r.cr):'—'}</td>
+    <td class="r" style="font-weight:600">${fmt(r.saldo)}</td>
+  </tr>`).join('') +
+  `<tr class="tr-total"><td colspan="3">TOTAL</td>
+    <td class="r pos">${fmt(totalDr)}</td><td class="r neg">${fmt(totalCr)}</td>
+    <td class="r">${fmt(saldo)}</td></tr>`;
+}
+
+function populateLedgerSel() {
+  const sel = document.getElementById('ledgerAccSel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Pilih Akun —</option>' +
+    activeCOA().map(a=>`<option value="${a.code}">${a.code} — ${a.name}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+// ══════════════════════════════════════════════════
+// TRIAL BALANCE
+// ══════════════════════════════════════════════════
+function computeBalances(periodFilter='') {
+  const bal = {};
+  activeCOA().forEach(a=>{ bal[a.code]={dr:0,cr:0}; });
+  let js = activeJournals();
+  if (periodFilter) js = js.filter(j=>j.date.startsWith(periodFilter));
+  js.forEach(j=>j.lines.forEach(l=>{
+    if (!bal[l.acc]) bal[l.acc]={dr:0,cr:0};
+    bal[l.acc].dr += l.dr||0;
+    bal[l.acc].cr += l.cr||0;
+  }));
+  return bal;
+}
+
+function computeSaldo(acc, bal) {
+  const b = bal[acc.code]||{dr:0,cr:0};
+  return acc.normal==='D' ? b.dr - b.cr : b.cr - b.dr;
+}
+
+// Net income = total pendapatan − total beban (both via absolute saldo of their natural side)
+function netIncomeFromBal(bal) {
+  const coa = activeCOA();
+  const pend = coa.filter(a=>a.type==='Pendapatan').reduce((s,a)=>s+computeSaldo(a,bal),0);
+  const beban = coa.filter(a=>a.type==='Beban').reduce((s,a)=>s+computeSaldo(a,bal),0);
+  return pend - beban;
+}
+
+// Cumulative balances up to & including a given YYYY-MM (for balance-sheet items)
+function computeBalancesCumulative(uptoPeriod='') {
+  const bal = {};
+  activeCOA().forEach(a=>{ bal[a.code]={dr:0,cr:0}; });
+  let js = activeJournals();
+  if (uptoPeriod) js = js.filter(j=>(j.date||'').slice(0,7) <= uptoPeriod);
+  js.forEach(j=>j.lines.forEach(l=>{
+    if (!bal[l.acc]) bal[l.acc]={dr:0,cr:0};
+    bal[l.acc].dr += l.dr||0;
+    bal[l.acc].cr += l.cr||0;
+  }));
+  return bal;
+}
+
+function renderTB() {
+  const period = document.getElementById('tbPeriodSel')?.value||'';
+  const bal = computeBalances(period);
+  const coa = activeCOA();
+
+  let totalDr=0, totalCr=0;
+  const rows = coa.map(a=>{
+    const b = bal[a.code]||{dr:0,cr:0};
+    const saldo = computeSaldo(a, bal);
+    totalDr += b.dr; totalCr += b.cr;
+    return {a, b, saldo};
+  }).filter(r=>r.b.dr>0||r.b.cr>0||r.saldo!==0);
+
+  const balanced = Math.abs(totalDr-totalCr)<0.01;
+  const badge = document.getElementById('tb-balance-badge');
+  if (badge) { badge.textContent = balanced?'Balanced ✓':'TIDAK BALANCE ✗'; badge.className='badge '+(balanced?'badge-green':'badge-red'); }
+
+  const totalSaldoDr = rows.filter(r=>r.saldo>0).reduce((a,r)=>a+r.saldo,0);
+  const totalSaldoCr = rows.filter(r=>r.saldo<0).reduce((a,r)=>a+Math.abs(r.saldo),0);
+
+  const kpis = document.getElementById('tb-kpis');
+  if (kpis) kpis.innerHTML =
+    `<div class="kpi kpi-g"><div class="kpi-lbl">Total Debit</div><div class="kpi-val pos">${fmt(totalDr)}</div></div>` +
+    `<div class="kpi kpi-r"><div class="kpi-lbl">Total Kredit</div><div class="kpi-val neg">${fmt(totalCr)}</div></div>` +
+    `<div class="kpi ${balanced?'kpi-g':'kpi-r'}"><div class="kpi-lbl">Status</div><div class="kpi-val ${balanced?'pos':'neg'}">${balanced?'Balanced':'Tidak Balance'}</div><div class="kpi-meta">Selisih: ${fmt(Math.abs(totalDr-totalCr))}</div></div>`;
+
+  const tb = document.querySelector('#t-tb tbody');
+  if (!tb) return;
+  const groups = [...new Set(coa.map(a=>a.type))];
+  tb.innerHTML = groups.map(g=>{
+    const gRows = rows.filter(r=>r.a.type===g);
+    if (!gRows.length) return '';
+    return `<tr class="tr-section"><td colspan="6">${g}</td></tr>` +
+      gRows.map(r=>`<tr>
+        <td><code style="font-size:10px;background:#f1f5f9;padding:1px 5px;border-radius:3px">${r.a.code}</code></td>
+        <td>${r.a.name}</td>
+        <td><span class="badge ${typeBadge(r.a.type)}">${r.a.subtype}</span></td>
+        <td class="r ${r.b.dr?'pos':''}">${fmt(r.b.dr)}</td>
+        <td class="r ${r.b.cr?'neg':''}">${fmt(r.b.cr)}</td>
+        <td class="r" style="font-weight:600;color:${r.saldo>=0?'var(--green)':'var(--red)'}">${fmt(r.saldo)}</td>
+      </tr>`).join('');
+  }).join('') +
+  `<tr class="tr-grand"><td colspan="3">TOTAL</td>
+    <td class="r pos">${fmt(totalDr)}</td><td class="r neg">${fmt(totalCr)}</td>
+    <td class="r">${fmt(totalSaldoDr-totalSaldoCr)}</td></tr>`;
+}
+
+// ══════════════════════════════════════════════════
+// NERACA
+// ══════════════════════════════════════════════════
+function renderNeraca() {
+  const period = document.getElementById('neracaPeriodSel')?.value||'';
+  const bal = computeBalances(period);
+  const coa = activeCOA();
+
+  const sum = (type, subtype) => {
+    return coa.filter(a=>a.type===type&&(subtype?a.subtype===subtype:true))
+      .reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  };
+
+  const asetLancar    = sum('Aset','Aset Lancar');
+  const asetTdkLancar = sum('Aset','Aset Tidak Lancar');
+  const totalAset     = asetLancar + asetTdkLancar;
+  const kwjLancar     = sum('Kewajiban','Kewajiban Lancar');
+  const kwjTdkLancar  = sum('Kewajiban','Kewajiban Tidak Lancar');
+  const totalEkuitas  = coa.filter(a=>a.type==='Ekuitas').reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const laba          = netIncomeFromBal(bal);
+  const totalKwj      = kwjLancar + kwjTdkLancar;
+  const totalKwjEk    = totalKwj + totalEkuitas + laba;
+
+  function makeRows(type, subtype) {
+    return coa.filter(a=>a.type===type&&a.subtype===subtype)
+      .map(a=>{const s=computeSaldo(a,bal);return s!==0?`<tr><td style="padding-left:32px;font-size:12px;color:var(--slate)">${a.name}</td><td class="r">${fmt(Math.abs(s))}</td></tr>`:''}).join('');
+  }
+
+  const out = document.getElementById('neraca-output');
+  if (!out) return;
+  out.innerHTML = `
+    <div class="tbl-hd"><div class="tbl-title">Laporan Posisi Keuangan${period?' — '+period:''}</div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Pos</th><th class="r">Jumlah (Rp)</th></tr></thead>
+      <tbody>
+        <tr class="tr-section"><td colspan="2">ASET LANCAR</td></tr>
+        ${makeRows('Aset','Aset Lancar')}
+        <tr class="tr-total"><td>Jumlah Aset Lancar</td><td class="r pos">${fmt(asetLancar)}</td></tr>
+        <tr class="tr-section"><td colspan="2">ASET TIDAK LANCAR</td></tr>
+        ${makeRows('Aset','Aset Tidak Lancar')}
+        <tr class="tr-total"><td>Jumlah Aset Tidak Lancar</td><td class="r pos">${fmt(asetTdkLancar)}</td></tr>
+        <tr class="tr-grand"><td>JUMLAH ASET</td><td class="r pos">${fmt(totalAset)}</td></tr>
+        <tr class="tr-section"><td colspan="2">KEWAJIBAN LANCAR</td></tr>
+        ${makeRows('Kewajiban','Kewajiban Lancar')}
+        <tr class="tr-total"><td>Total Kewajiban Lancar</td><td class="r neg">${fmt(kwjLancar)}</td></tr>
+        <tr class="tr-section"><td colspan="2">KEWAJIBAN TIDAK LANCAR</td></tr>
+        ${makeRows('Kewajiban','Kewajiban Tidak Lancar')}
+        <tr class="tr-total"><td>Total Kewajiban Tidak Lancar</td><td class="r neg">${fmt(kwjTdkLancar)}</td></tr>
+        <tr class="tr-section"><td colspan="2">EKUITAS</td></tr>
+        ${makeRows('Ekuitas','Modal')}${makeRows('Ekuitas','Laba Ditahan')}
+        <tr><td style="padding-left:32px;font-size:12px;color:var(--slate)">Laba (Rugi) Periode Berjalan</td><td class="r ${laba>=0?'pos':'neg'}">${fmt(laba)}</td></tr>
+        <tr class="tr-total"><td>Total Ekuitas</td><td class="r">${fmt(totalEkuitas+laba)}</td></tr>
+        <tr class="tr-grand"><td>JUMLAH KEWAJIBAN & EKUITAS</td><td class="r ${Math.abs(totalAset-totalKwjEk)<1?'pos':'neg'}">${fmt(totalKwjEk)}</td></tr>
+        ${Math.abs(totalAset-totalKwjEk)>1?`<tr><td colspan="2" style="text-align:right;color:var(--red);font-size:11px;padding:6px 16px">⚠️ Selisih: ${fmt(Math.abs(totalAset-totalKwjEk))}</td></tr>`:''}
+      </tbody>
+    </table></div>`;
+}
+
+// ══════════════════════════════════════════════════
+// LABA RUGI
+// ══════════════════════════════════════════════════
+function renderLR() {
+  const period = document.getElementById('lrPeriodSel')?.value||'';
+  const bal = computeBalances(period);
+  const coa = activeCOA();
+
+  function rows(type, subtype) {
+    return coa.filter(a=>a.type===type&&(subtype?a.subtype===subtype:true))
+      .map(a=>{const s=computeSaldo(a,bal);return s!==0?`<tr><td style="padding-left:32px;font-size:12px;color:var(--slate)">${a.name}</td><td class="r">${fmt(Math.abs(s))}</td></tr>`:''}).join('');
+  }
+
+  const pendUsaha   = coa.filter(a=>a.type==='Pendapatan'&&a.subtype==='Pendapatan Usaha').reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const pendLain    = coa.filter(a=>a.type==='Pendapatan'&&a.subtype!=='Pendapatan Usaha').reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const bebanPokok  = coa.filter(a=>a.type==='Beban'&&a.subtype==='Beban Pokok').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const bebanUmum   = coa.filter(a=>a.type==='Beban'&&a.subtype==='Beban Umum & Adm').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const bebanPenjualan = coa.filter(a=>a.type==='Beban'&&a.subtype==='Beban Penjualan').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const bebanPenyusutan = coa.filter(a=>a.type==='Beban'&&a.subtype==='Penyusutan & Amortisasi').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const bebanLain   = coa.filter(a=>a.type==='Beban'&&(a.subtype==='Beban Lain'||a.subtype==='Beban Pajak')).reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const totalBeban  = bebanPokok+bebanUmum+bebanPenjualan+bebanPenyusutan+bebanLain;
+  const labaKotor   = pendUsaha - bebanPokok;
+  const labaOp      = labaKotor - bebanUmum - bebanPenjualan - bebanPenyusutan;
+  const labaBersih  = labaOp + pendLain - bebanLain;
+
+  const out = document.getElementById('lr-output');
+  if (!out) return;
+  out.innerHTML = `
+    <div class="tbl-hd"><div class="tbl-title">Laporan Laba Rugi${period?' — '+period:''}</div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Pos</th><th class="r">Jumlah (Rp)</th></tr></thead>
+      <tbody>
+        <tr class="tr-section"><td colspan="2">PENDAPATAN USAHA</td></tr>
+        ${rows('Pendapatan','Pendapatan Usaha')}
+        <tr class="tr-total"><td>Total Pendapatan Usaha</td><td class="r pos">${fmt(pendUsaha)}</td></tr>
+        <tr class="tr-section"><td colspan="2">BEBAN POKOK</td></tr>
+        ${rows('Beban','Beban Pokok')}
+        <tr class="tr-total"><td>Harga Pokok Produksi</td><td class="r neg">(${fmt(bebanPokok)})</td></tr>
+        <tr class="tr-grand" style="background:#f0fff4!important"><td>LABA KOTOR</td><td class="r ${labaKotor>=0?'pos':'neg'}">${fmt(labaKotor)}</td></tr>
+        <tr class="tr-section"><td colspan="2">BEBAN OPERASIONAL</td></tr>
+        ${rows('Beban','Beban Umum & Adm')}${rows('Beban','Beban Penjualan')}${rows('Beban','Penyusutan & Amortisasi')}
+        <tr class="tr-total"><td>Total Beban Operasi</td><td class="r neg">(${fmt(bebanUmum+bebanPenjualan+bebanPenyusutan)})</td></tr>
+        <tr class="tr-grand" style="background:#f0fff4!important"><td>LABA (RUGI) OPERASI</td><td class="r ${labaOp>=0?'pos':'neg'}">${fmt(labaOp)}</td></tr>
+        <tr class="tr-section"><td colspan="2">PENDAPATAN & BEBAN LAIN-LAIN</td></tr>
+        ${rows('Pendapatan','Pendapatan Lain')}${rows('Beban','Beban Lain')}${rows('Beban','Beban Pajak')}
+        <tr class="tr-grand"><td>LABA (RUGI) BERSIH</td><td class="r ${labaBersih>=0?'pos':'neg'}">${fmt(labaBersih)}</td></tr>
+      </tbody>
+    </table></div>`;
+}
+
+// ══════════════════════════════════════════════════
+// ARUS KAS (Indirect Method)
+// ══════════════════════════════════════════════════
+function renderAK() {
+  const period = document.getElementById('akPeriodSel')?.value||'';
+  const coa = activeCOA();
+  const bal = computeBalances(period);
+
+  const cfGroup = (cfCode) => coa.filter(a=>a.cf===cfCode&&a.type==='Beban');
+
+  const kas = coa.filter(a=>a.subtype==='Aset Lancar'&&(a.name.toLowerCase().includes('kas')||a.name.toLowerCase().includes('bank')))
+    .reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+
+  const pendUsaha = coa.filter(a=>a.type==='Pendapatan'&&a.subtype==='Pendapatan Usaha').reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const labaBersih = netIncomeFromBal(bal);
+  const depr = coa.filter(a=>a.subtype==='Penyusutan & Amortisasi').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const cfoBeban = coa.filter(a=>a.cf==='CFO'&&a.type==='Beban').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const cfo = labaBersih + depr;
+
+  const cfiOut = coa.filter(a=>a.cf==='CFI'&&a.type==='Aset').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const cfiIn  = coa.filter(a=>a.cf==='CFI'&&a.type==='Pendapatan').reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const cfi = cfiIn - cfiOut;
+
+  const cffIn  = coa.filter(a=>a.cf==='CFF'&&a.type==='Ekuitas').reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const cffIn2 = coa.filter(a=>a.cf==='CFF'&&a.type==='Kewajiban').reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const cff = cffIn + cffIn2;
+
+  const netKas = cfo + cfi + cff;
+
+  const out = document.getElementById('ak-output');
+  if (!out) return;
+  out.innerHTML = `
+    <div class="tbl-hd"><div class="tbl-title">Laporan Arus Kas${period?' — '+period:''}</div>
+      <span class="badge badge-gold">Metode Tidak Langsung</span>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Aktivitas</th><th class="r">Jumlah (Rp)</th></tr></thead>
+      <tbody>
+        <tr class="tr-section"><td colspan="2">ARUS KAS DARI AKTIVITAS OPERASI</td></tr>
+        <tr><td style="padding-left:32px;font-size:12px">Laba (Rugi) Bersih</td><td class="r ${labaBersih>=0?'pos':'neg'}">${fmt(labaBersih)}</td></tr>
+        <tr><td style="padding-left:32px;font-size:12px">Penyesuaian: Penyusutan & Amortisasi</td><td class="r">${fmt(depr)}</td></tr>
+        <tr class="tr-total"><td>Kas Bersih dari/ (untuk) Aktivitas Operasi</td><td class="r ${cfo>=0?'pos':'neg'}">${fmt(cfo)}</td></tr>
+        <tr class="tr-section"><td colspan="2">ARUS KAS DARI AKTIVITAS INVESTASI</td></tr>
+        <tr><td style="padding-left:32px;font-size:12px">Perolehan Aset Jangka Panjang</td><td class="r neg">(${fmt(cfiOut)})</td></tr>
+        <tr><td style="padding-left:32px;font-size:12px">Penerimaan Bunga & Lainnya</td><td class="r pos">${fmt(cfiIn)}</td></tr>
+        <tr class="tr-total"><td>Kas Bersih dari/ (untuk) Aktivitas Investasi</td><td class="r ${cfi>=0?'pos':'neg'}">${fmt(cfi)}</td></tr>
+        <tr class="tr-section"><td colspan="2">ARUS KAS DARI AKTIVITAS PENDANAAN</td></tr>
+        <tr><td style="padding-left:32px;font-size:12px">Penerimaan Modal & Utang</td><td class="r pos">${fmt(cffIn+cffIn2)}</td></tr>
+        <tr class="tr-total"><td>Kas Bersih dari/ (untuk) Aktivitas Pendanaan</td><td class="r ${cff>=0?'pos':'neg'}">${fmt(cff)}</td></tr>
+        <tr class="tr-grand"><td>KENAIKAN / (PENURUNAN) KAS BERSIH</td><td class="r ${netKas>=0?'pos':'neg'}">${fmt(netKas)}</td></tr>
+        <tr><td style="padding-left:32px;font-size:12px">Saldo Kas & Bank (dari Buku Besar)</td><td class="r">${fmt(kas)}</td></tr>
+      </tbody>
+    </table></div>`;
+}
+
+// ══════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════
+function renderDashboard() {
+  const bal = computeBalances();
+  const coa = activeCOA();
+
+  const totalAset = coa.filter(a=>a.type==='Aset').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const totalKwj  = coa.filter(a=>a.type==='Kewajiban').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const totalEk   = coa.filter(a=>a.type==='Ekuitas').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const labaBersih = netIncomeFromBal(bal);
+  const js = activeJournals();
+  const nJurnal = js.length;
+
+  document.getElementById('dash-kpis').innerHTML =
+    `<div class="kpi kpi-g"><div class="kpi-lbl">Total Aset</div><div class="kpi-val pos">${fmt(totalAset)}</div><div class="kpi-meta">Dari buku besar</div></div>` +
+    `<div class="kpi"><div class="kpi-lbl">Total Kewajiban</div><div class="kpi-val neg">${fmt(totalKwj)}</div></div>` +
+    `<div class="kpi"><div class="kpi-lbl">Total Ekuitas</div><div class="kpi-val">${fmt(totalEk+labaBersih)}</div></div>` +
+    `<div class="kpi kpi-b"><div class="kpi-lbl">Jumlah Jurnal</div><div class="kpi-val">${nJurnal}</div><div class="kpi-meta">entri tercatat</div></div>`;
+
+  // Charts
+  mkChart('c-dash-bs','bar',['Aset','Kewajiban','Ekuitas'],[{
+    data:[totalAset,totalKwj,totalEk+labaBersih],
+    backgroundColor:['#2d6a4f99','#b5282b99','#c9a84c99'], borderRadius:6,
+  }],false);
+
+  const top5 = coa.map(a=>({name:a.name.substring(0,18),saldo:Math.abs(computeSaldo(a,bal))}))
+    .sort((a,b)=>b.saldo-a.saldo).slice(0,5);
+  mkChart('c-dash-top','doughnut',top5.map(x=>x.name),[{
+    data:top5.map(x=>x.saldo),
+    backgroundColor:CHART_COLORS, borderWidth:2, borderColor:'#fff',
+  }],true);
+
+  // Recent journals
+  const recent = [...js].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
+  const tb = document.querySelector('#t-recent-journals tbody');
+  tb.innerHTML = recent.flatMap(j=>j.lines.slice(0,1).map(l=>`<tr>
+    <td>${j.date}</td><td>${j.voucher}</td><td>${j.desc}</td>
+    <td class="r pos">${l.dr?fmt(l.dr):'—'}</td>
+    <td class="r neg">${l.cr?fmt(l.cr):'—'}</td>
+    <td><span class="badge ${j.type==='ADJ'?'badge-gold':'badge-blue'}">${j.type}</span></td>
+  </tr>`)).join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--slate)">Belum ada jurnal</td></tr>';
+
+  document.getElementById('dash-period-sub').textContent =
+    `Perusahaan: ${activeCo()?.name} — Total ${nJurnal} jurnal tercatat.`;
+}
+
+// ══════════════════════════════════════════════════
+// UPLOAD EXCEL TRANSAKSI
+// ══════════════════════════════════════════════════
+function handleXlsxUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(e.target.result, {type:'array'});
+    const sheetName = wb.SheetNames.find(s=>s.toLowerCase().includes('jurnal')||s.toLowerCase().includes('transaksi'))||wb.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header:1,defval:null});
+    input.value='';
+    ingestRows(rows, 'Excel');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function handleCOAUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(e.target.result,{type:'array'});
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:null});
+    let count=0;
+    rows.slice(1).forEach(r=>{
+      if (!r[0]||!r[1]) return;
+      const code=String(r[0]).trim(), name=String(r[1]).trim();
+      if (!activeCOA().find(a=>a.code===code)) {
+        DB.coa[DB.activeCoId].push({code,name,type:r[2]||'Aset',subtype:r[3]||'Aset Lancar',normal:r[4]||'D',cf:r[5]||''});
+        count++;
+      }
+    });
+    DB.coa[DB.activeCoId].sort((a,b)=>a.code.localeCompare(b.code));
+    input.value=''; renderCOATable(); saveDB();
+    toast(`${count} akun berhasil diimport`,'ok');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseExcelDate(v) {
+  if (v===null||v===undefined||v==='') return null;
+  if (typeof v === 'number') {
+    const d = new Date(Math.round((v-25569)*86400*1000));
+    return d.toISOString().split('T')[0];
+  }
+  const s = String(v).trim();
+  // ISO YYYY-MM-DD (atau YYYY/MM/DD) — dicek lebih dulu agar tidak salah tafsir
+  let m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  // DD/MM/YYYY atau DD-MM-YYYY (format Indonesia: hari dulu)
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (m) {
+    const y = m[3].length===2?'20'+m[3]:m[3];
+    return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  }
+  return null;
+}
+
+// Pembaca angka yang TAHAN FORMAT (lokal Indonesia maupun Inggris, dengan/tanpa
+// pemisah ribuan, Rp, spasi/nbsp, dan tanda kurung sebagai negatif).
+// Inilah inti perbaikan "selisih CSV": versi lama hanya benar untuk format ID murni.
+function parseNum(v) {
+  if (typeof v === 'number') return isFinite(v) ? v : 0;
+  let s = String(v==null ? '' : v).trim();
+  if (!s) return 0;
+  let neg = false;
+  if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1,-1); }   // (1.000) → -1000
+  if (s.indexOf('-') >= 0) neg = true;
+  s = s.replace(/[^0-9.,]/g, '');                               // buang Rp, spasi, nbsp, dll
+  if (!s) return 0;
+  const lastDot = s.lastIndexOf('.'), lastComma = s.lastIndexOf(',');
+  let dec = -1; // posisi pemisah desimal (jika ada)
+  if (lastDot >= 0 && lastComma >= 0) {
+    dec = Math.max(lastDot, lastComma);                         // yang paling kanan = desimal
+  } else if (lastComma >= 0) {
+    const cnt = (s.match(/,/g)||[]).length, after = s.length-1-lastComma;
+    dec = (cnt===1 && after>0 && after<=2) ? lastComma : -1;    // 1–2 digit di belakang → desimal
+  } else if (lastDot >= 0) {
+    const cnt = (s.match(/\./g)||[]).length, after = s.length-1-lastDot;
+    dec = (cnt===1 && after>0 && after<=2) ? lastDot : -1;
+  }
+  let num;
+  if (dec >= 0) {
+    const ip = s.slice(0,dec).replace(/[.,]/g,''), fp = s.slice(dec+1).replace(/[.,]/g,'');
+    num = parseFloat(ip + '.' + fp) || 0;
+  } else {
+    num = parseFloat(s.replace(/[.,]/g,'')) || 0;
+  }
+  return neg ? -num : num;
+}
+
+// Menebak tipe akun dari digit pertama kode (mengikuti konvensi COA: 1=Aset,
+// 2=Kewajiban, 3=Ekuitas, 4=Pendapatan, 5/6=Beban, 7=campuran, 8=Beban Pajak).
+function inferAccountFromCode(code) {
+  const c = String(code).trim(); const d = c[0];
+  let type='Aset', subtype='Aset Lancar', normal='D', cf='';
+  if (d==='1') { type='Aset'; normal='D'; cf='CFO';
+    if (c.startsWith('17')||c.startsWith('18')) { subtype='Aset Tidak Lancar'; cf='CFI'; if (c.startsWith('179')) normal='K'; }
+    else subtype='Aset Lancar';
+  } else if (d==='2') { type='Kewajiban'; normal='K';
+    if (c.startsWith('25')||c.startsWith('26')) { subtype='Kewajiban Tidak Lancar'; cf='CFF'; }
+    else { subtype='Kewajiban Lancar'; cf='CFO'; }
+  } else if (d==='3') { type='Ekuitas'; normal='K'; cf='CFF'; subtype=c.startsWith('32')?'Laba Ditahan':'Modal'; }
+  else if (d==='4') { type='Pendapatan'; subtype='Pendapatan Usaha'; normal='K'; cf='CFO'; }
+  else if (d==='5') { type='Beban'; subtype='Beban Pokok'; normal='D'; cf='CFO'; }
+  else if (d==='6') { type='Beban'; subtype='Beban Umum & Adm'; normal='D'; cf='CFO'; }
+  else if (d==='7') { if (c.startsWith('772')) { type='Pendapatan'; subtype='Pendapatan Lain'; normal='K'; cf='CFI'; }
+                      else { type='Beban'; subtype='Beban Lain'; normal='D'; cf='CFO'; } }
+  else if (d==='8') { type='Beban'; subtype='Beban Pajak'; normal='D'; cf='CFO'; }
+  return { code:c, name:'⚠ Perlu Verifikasi — '+c, type, subtype, normal, cf };
+}
+
+// ══════════════════════════════════════════════════
+// RATIO ANALYSIS
+// ══════════════════════════════════════════════════
+function computeFinancials(period='') {
+  const coa = activeCOA();
+  const bal = computeBalances(period);
+  const sumType = (type, subtype) => coa.filter(a=>a.type===type&&(subtype?a.subtype===subtype:true))
+    .reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+
+  const asetLancar    = sumType('Aset','Aset Lancar');
+  const asetTdkLancar = sumType('Aset','Aset Tidak Lancar');
+  const totalAset     = asetLancar + asetTdkLancar;
+  const kwjLancar     = sumType('Kewajiban','Kewajiban Lancar');
+  const kwjTdkLancar  = sumType('Kewajiban','Kewajiban Tidak Lancar');
+  const totalKwj      = kwjLancar + kwjTdkLancar;
+  const ekuitasModal  = coa.filter(a=>a.type==='Ekuitas').reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const pendUsaha     = coa.filter(a=>a.type==='Pendapatan'&&a.subtype==='Pendapatan Usaha').reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const pendLain      = coa.filter(a=>a.type==='Pendapatan'&&a.subtype!=='Pendapatan Usaha').reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const bebanPokok    = coa.filter(a=>a.type==='Beban'&&a.subtype==='Beban Pokok').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,bal)),0);
+  const labaBersih    = netIncomeFromBal(bal);
+  const labaKotor     = pendUsaha - bebanPokok;
+  const totalPend     = pendUsaha + pendLain;
+  const ekuitas       = ekuitasModal + labaBersih;
+  // kas
+  const kas = coa.filter(a=>a.subtype==='Aset Lancar'&&(a.name.toLowerCase().includes('kas')||a.name.toLowerCase().includes('bank')))
+    .reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+  const persediaan = coa.filter(a=>a.subtype==='Aset Lancar'&&a.name.toLowerCase().includes('persediaan'))
+    .reduce((acc,a)=>acc+computeSaldo(a,bal),0);
+
+  return {asetLancar,asetTdkLancar,totalAset,kwjLancar,kwjTdkLancar,totalKwj,
+          ekuitas,pendUsaha,totalPend,bebanPokok,labaBersih,labaKotor,kas,persediaan};
+}
+
+function renderRatios() {
+  const period = document.getElementById('rasioPeriodSel')?.value||'';
+  const f = computeFinancials(period);
+  const safe = (n,d) => d===0 ? null : n/d;
+  const pctf = (r) => r===null ? '—' : (r*100).toFixed(1)+'%';
+  const xf   = (r) => r===null ? '—' : r.toFixed(2)+'×';
+
+  // ── PROFITABILITAS ──
+  const npm = safe(f.labaBersih, f.totalPend);   // Net Profit Margin
+  const gpm = safe(f.labaKotor, f.pendUsaha);    // Gross Profit Margin
+  const roa = safe(f.labaBersih, f.totalAset);   // Return on Assets
+  const roe = safe(f.labaBersih, f.ekuitas);     // Return on Equity
+
+  const pe = document.getElementById('ratio-profit');
+  if (pe) pe.innerHTML =
+    ratioCard('Net Profit Margin', pctf(npm), 'Laba Bersih / Pendapatan', npm) +
+    ratioCard('Gross Profit Margin', pctf(gpm), 'Laba Kotor / Penjualan', gpm) +
+    ratioCard('ROA', pctf(roa), 'Return on Assets', roa) +
+    ratioCard('ROE', pctf(roe), 'Return on Equity', roe);
+
+  // ── LIKUIDITAS ──
+  const current = safe(f.asetLancar, f.kwjLancar);            // Current Ratio
+  const quick   = safe(f.asetLancar - f.persediaan, f.kwjLancar); // Quick Ratio
+  const cash    = safe(f.kas, f.kwjLancar);                   // Cash Ratio
+  const wc      = f.asetLancar - f.kwjLancar;                 // Working Capital
+
+  const le = document.getElementById('ratio-liquid');
+  if (le) le.innerHTML =
+    ratioCard('Current Ratio', xf(current), 'Aset Lancar / Kewajiban Lancar', current, 1.5, true) +
+    ratioCard('Quick Ratio', xf(quick), '(Aset Lancar − Persediaan) / Kwj Lancar', quick, 1.0, true) +
+    ratioCard('Cash Ratio', xf(cash), 'Kas / Kewajiban Lancar', cash, 0.5, true) +
+    `<div class="kpi kpi-b"><div class="kpi-lbl">Modal Kerja</div><div class="kpi-val ${wc>=0?'pos':'neg'}">${fmt(wc)}</div><div class="kpi-meta">Aset Lancar − Kwj Lancar</div></div>`;
+
+  // ── SOLVABILITAS ──
+  const der = safe(f.totalKwj, f.ekuitas);        // Debt to Equity
+  const dar = safe(f.totalKwj, f.totalAset);      // Debt to Assets
+  const eq  = safe(f.ekuitas, f.totalAset);       // Equity Ratio
+
+  const se = document.getElementById('ratio-solva');
+  if (se) se.innerHTML =
+    ratioCard('Debt to Equity (DER)', xf(der), 'Total Kewajiban / Ekuitas', der, 1.0, false, true) +
+    ratioCard('Debt to Assets (DAR)', pctf(dar), 'Total Kewajiban / Total Aset', dar, 0.5, false, true) +
+    ratioCard('Equity Ratio', pctf(eq), 'Ekuitas / Total Aset', eq, 0.5, true) +
+    `<div class="kpi"><div class="kpi-lbl">Total Aset</div><div class="kpi-val">${fmt(f.totalAset)}</div><div class="kpi-meta">Basis perhitungan</div></div>`;
+
+  // Charts
+  mkChart('c-ratio-struct','doughnut',['Kewajiban','Ekuitas'],[{
+    data:[f.totalKwj, f.ekuitas], backgroundColor:['#b5282b','#2d6a4f'], borderWidth:2, borderColor:'#fff',
+  }],true);
+  mkChart('c-ratio-aset','doughnut',['Aset Lancar','Aset Tidak Lancar'],[{
+    data:[f.asetLancar, f.asetTdkLancar], backgroundColor:['#c9a84c','#1a2332'], borderWidth:2, borderColor:'#fff',
+  }],true);
+
+  // Interpretation table
+  const interp = [
+    ['Current Ratio', xf(current), current===null?'Data belum cukup':current>=1.5?'✅ Sehat — mampu bayar kewajiban jangka pendek':current>=1?'⚠️ Cukup, perlu dipantau':'🔴 Rendah — risiko likuiditas'],
+    ['Debt to Equity', xf(der), der===null?'Data belum cukup':der<=1?'✅ Konservatif — leverage rendah':der<=2?'⚠️ Moderat':'🔴 Tinggi — banyak utang'],
+    ['Net Profit Margin', pctf(npm), npm===null?'Belum ada pendapatan':npm>=0.1?'✅ Profitabilitas baik':npm>=0?'⚠️ Margin tipis':'🔴 Merugi'],
+    ['ROE', pctf(roe), roe===null?'Data belum cukup':roe>=0.15?'✅ Pengembalian modal baik':roe>=0?'⚠️ Pengembalian rendah':'🔴 Negatif'],
+    ['Equity Ratio', pctf(eq), eq===null?'Data belum cukup':eq>=0.5?'✅ Struktur modal kuat':'⚠️ Banyak dibiayai utang'],
+  ];
+  const tb = document.querySelector('#t-ratio-interp tbody');
+  if (tb) tb.innerHTML = interp.map(r=>`<tr><td><strong>${r[0]}</strong></td><td class="r" style="font-weight:600">${r[1]}</td><td style="font-size:12px">${r[2]}</td></tr>`).join('');
+}
+
+function ratioCard(label, val, sub, raw, threshold, higherBetter, lowerBetter) {
+  let cls = '';
+  if (raw!==null && threshold!==undefined) {
+    if (lowerBetter) cls = raw<=threshold ? 'kpi-g' : 'kpi-r';
+    else if (higherBetter) cls = raw>=threshold ? 'kpi-g' : 'kpi-r';
+  }
+  return `<div class="kpi ${cls}"><div class="kpi-lbl">${label}</div><div class="kpi-val">${val}</div><div class="kpi-meta">${sub}</div></div>`;
+}
+
+function exportRatiosCSV() {
+  const period = document.getElementById('rasioPeriodSel')?.value||'';
+  const f = computeFinancials(period);
+  const safe=(n,d)=>d===0?'':(n/d).toFixed(4);
+  const rows = [
+    ['Rasio','Nilai','Kategori'],
+    ['Net Profit Margin', safe(f.labaBersih,f.totalPend), 'Profitabilitas'],
+    ['Gross Profit Margin', safe(f.labaKotor,f.pendUsaha), 'Profitabilitas'],
+    ['ROA', safe(f.labaBersih,f.totalAset), 'Profitabilitas'],
+    ['ROE', safe(f.labaBersih,f.ekuitas), 'Profitabilitas'],
+    ['Current Ratio', safe(f.asetLancar,f.kwjLancar), 'Likuiditas'],
+    ['Quick Ratio', safe(f.asetLancar-f.persediaan,f.kwjLancar), 'Likuiditas'],
+    ['Cash Ratio', safe(f.kas,f.kwjLancar), 'Likuiditas'],
+    ['Debt to Equity', safe(f.totalKwj,f.ekuitas), 'Solvabilitas'],
+    ['Debt to Assets', safe(f.totalKwj,f.totalAset), 'Solvabilitas'],
+    ['Equity Ratio', safe(f.ekuitas,f.totalAset), 'Solvabilitas'],
+  ];
+  downloadCSV(rows, `Rasio_${activeCo().name}_${activeYear||'all'}_${today()}.csv`);
+}
+
+
+// ══════════════════════════════════════════════════
+// CSV / TXT HELPERS
+// ══════════════════════════════════════════════════
+function csvCell(v) {
+  if (v===null||v===undefined) return '';
+  const s = String(v);
+  return /[",\n;]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+function downloadText(content, filename, mime) {
+  const blob = new Blob([content], {type: mime||'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function downloadCSV(rows, filename) {
+  const content = rows.map(r=>r.map(csvCell).join(',')).join('\n');
+  downloadText('\ufeff'+content, filename, 'text/csv;charset=utf-8');
+}
+function downloadTXT(rows, filename) {
+  const content = rows.map(r=>r.map(c=>c===null||c===undefined?'':String(c)).join('\t')).join('\n');
+  downloadText(content, filename, 'text/plain;charset=utf-8');
+}
+
+// ══════════════════════════════════════════════════
+// EXPORT LAPKEU (CSV/TXT for FinDash) — periods as columns
+// ══════════════════════════════════════════════════
+function buildLapKeuMatrix() {
+  const co = activeCo();
+  const coa = activeCOA();
+  const periods = [...new Set(activeJournals().map(j=>j.date.slice(0,7)))].sort();
+  if (periods.length === 0) return null;
+
+  // Balance-sheet items: CUMULATIVE up to period (point-in-time position)
+  const sumCum = (type, subtype, period) => {
+    const pBal = computeBalancesCumulative(period);
+    return coa.filter(a=>a.type===type&&(subtype?a.subtype===subtype:true))
+      .reduce((acc,a)=>acc+Math.abs(computeSaldo(a,pBal)),0);
+  };
+  // P&L items: period MOVEMENT only (flow during the month)
+  const labaBersihPeriod = (period) => {
+    const pBal = computeBalances(period);
+    return netIncomeFromBal(pBal);
+  };
+  // Cumulative retained earnings for equity position
+  const labaBersihCum = (period) => {
+    const pBal = computeBalancesCumulative(period);
+    return netIncomeFromBal(pBal);
+  };
+  const ekuitasFull = (period) => {
+    const pBal = computeBalancesCumulative(period);
+    return coa.filter(a=>a.type==='Ekuitas').reduce((acc,a)=>acc+Math.abs(computeSaldo(a,pBal)),0) + labaBersihCum(period);
+  };
+  const kasAkhir = (period) => {
+    const pBal = computeBalancesCumulative(period);
+    return coa.filter(a=>a.subtype==='Aset Lancar'&&(a.name.toLowerCase().includes('kas')||a.name.toLowerCase().includes('bank')))
+      .reduce((acc,a)=>acc+computeSaldo(a,pBal),0);
+  };
+  // Cash flow: period movement
+  const cfo=(p)=>{const b=computeBalances(p);const lb=labaBersihPeriod(p);const d=coa.filter(a=>a.subtype==='Penyusutan & Amortisasi').reduce((s,a)=>s+Math.abs(computeSaldo(a,b)),0);return lb+d;};
+  const cfi=(p)=>{const b=computeBalances(p);return coa.filter(a=>a.cf==='CFI'&&a.type==='Aset').reduce((s,a)=>s+Math.abs(computeSaldo(a,b)),0)*-1;};
+  const cff=(p)=>{const b=computeBalances(p);return coa.filter(a=>a.cf==='CFF').reduce((s,a)=>s+computeSaldo(a,b),0);};
+
+  // build rows: label col + one col per period (matching FinDash parser keywords)
+  const matrix = [];
+  matrix.push(['Pos / Keterangan', ...periods]);
+  const addRow = (label, fn) => matrix.push([label, ...periods.map(p=>Math.round(fn(p)))]);
+
+  matrix.push(['LAPORAN POSISI KEUANGAN']);
+  addRow('Jumlah Aset Lancar', p=>sumCum('Aset','Aset Lancar',p));
+  addRow('Jumlah Aset Tidak Lancar', p=>sumCum('Aset','Aset Tidak Lancar',p));
+  addRow('Jumlah Aset', p=>sumCum('Aset','Aset Lancar',p)+sumCum('Aset','Aset Tidak Lancar',p));
+  addRow('Total Kewajiban Lancar', p=>sumCum('Kewajiban','Kewajiban Lancar',p));
+  addRow('Total Ekuitas', p=>ekuitasFull(p));
+  addRow('Jumlah Kewajiban dan Ekuitas', p=>sumCum('Kewajiban','Kewajiban Lancar',p)+sumCum('Kewajiban','Kewajiban Tidak Lancar',p)+ekuitasFull(p));
+  matrix.push(['LAPORAN LABA RUGI']);
+  addRow('Total Beban Operasi', p=>coa.filter(a=>a.type==='Beban').reduce((s,a)=>s+Math.abs(computeSaldo(a,computeBalances(p))),0)*-1);
+  addRow('Pendapatan Bunga Bank', p=>{const b=computeBalances(p);return coa.filter(a=>a.code==='7720.00').reduce((s,a)=>s+computeSaldo(a,b),0);});
+  addRow('Laba Bersih', p=>labaBersihPeriod(p));
+  matrix.push(['LAPORAN ARUS KAS']);
+  addRow('Kas Bersih dari/ (untuk) Aktivitas Operasi', cfo);
+  addRow('Kas Bersih dari/ (untuk) Aktivitas Investasi', cfi);
+  addRow('Kas Bersih dari/ (untuk) Aktivitas Pendanaan', cff);
+  addRow('Kenaikan/ (Penurunan) Kas', p=>kasAkhir(p));
+  addRow('Kas Akhir Periode', p=>kasAkhir(p));
+
+  return {matrix, periods, co};
+}
+
+function exportLapKeuTemplate() {
+  const r = buildLapKeuMatrix();
+  if (!r) { toast('Belum ada data jurnal untuk diekspor','err'); return; }
+  // XLSX with LapKeu sheet structured for FinDash parser (label in col D, periods from col G)
+  const aoa = [];
+  aoa.push([r.co]); aoa.push([]); aoa.push([]); aoa.push([]); aoa.push([]);
+  // period header row (row index 5 → row 6): cols G,I,K... = indices 6,8,10
+  const hdr = ['','','','','','']; r.periods.forEach((p,i)=>{ hdr[6+i*2]=p; });
+  aoa.push(hdr);
+  // data rows: label at col D (index 3), values at G,I,K...
+  r.matrix.slice(1).forEach(row=>{
+    const out = ['','','',row[0],'',''];
+    if (row.length>1) row.slice(1).forEach((v,i)=>{ out[6+i*2]=v; });
+    aoa.push(out);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb2 = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb2, ws, 'LapKeu');
+  XLSX.writeFile(wb2, `LapKeu_${r.co}_${activeYear||'all'}_${today()}.xlsx`);
+  toast('Template LapKeu (Excel) diekspor! Upload ke FinDash.','ok');
+}
+
+function exportLapKeuCSV() {
+  const r = buildLapKeuMatrix();
+  if (!r) { toast('Belum ada data jurnal','err'); return; }
+  downloadCSV(r.matrix, `LapKeu_${r.co}_${activeYear||'all'}_${today()}.csv`);
+  toast('Laporan keuangan CSV diekspor!','ok');
+}
+function exportLapKeuTXT() {
+  const r = buildLapKeuMatrix();
+  if (!r) { toast('Belum ada data jurnal','err'); return; }
+  downloadTXT(r.matrix, `LapKeu_${r.co}_${activeYear||'all'}_${today()}.txt`);
+  toast('Laporan keuangan TXT diekspor!','ok');
+}
+
+// ══════════════════════════════════════════════════
+// EXPORT BUKU BESAR (CSV) — Tanggal, No Dokumen, Debit, Kredit, Saldo
+// ══════════════════════════════════════════════════
+function exportLedgerCSV(asTxt) {
+  const code = document.getElementById('ledgerAccSel')?.value || '';
+  const monthFilter = document.getElementById('ledgerMonthSel')?.value || '';
+  const rows = [['Tanggal','No. Dokumen','Kode Akun','Nama Akun','Keterangan','Debit','Kredit','Saldo']];
+
+  const codes = code ? [code] : activeCOA().map(a=>a.code);
+  codes.forEach(c => {
+    const acc = getCOA(c);
+    if (!acc) return;
+    let js = activeJournals();
+    if (monthFilter) js = js.filter(j=>j.date.startsWith(monthFilter));
+    js = js.slice().sort((a,b)=>a.date.localeCompare(b.date));
+    const normalD = acc.normal==='D';
+    let saldo = 0;
+    let hasRows = false;
+    const accRows = [];
+    js.forEach(j=>j.lines.filter(l=>l.acc===c).forEach(l=>{
+      saldo += normalD ? (l.dr-l.cr) : (l.cr-l.dr);
+      accRows.push([j.date, j.voucher, c, acc.name, l.desc||j.desc, l.dr||0, l.cr||0, saldo]);
+      hasRows = true;
+    }));
+    if (hasRows) {
+      if (!code) rows.push([`— ${c} ${acc.name} —`,'','','','','','','']);
+      accRows.forEach(r=>rows.push(r));
+    }
+  });
+
+  if (rows.length<=1) { toast('Tidak ada transaksi untuk diekspor','err'); return; }
+  const fn = `BukuBesar_${activeCo().name}_${code||'semua'}_${activeYear||'all'}_${today()}`;
+  if (asTxt) downloadTXT(rows, fn+'.txt'); else downloadCSV(rows, fn+'.csv');
+  toast('Buku Besar diekspor ('+(asTxt?'TXT':'CSV')+')!','ok');
+}
+
+// ══════════════════════════════════════════════════
+// HAPUS SEMUA JURNAL UMUM
+// ══════════════════════════════════════════════════
+function deleteAllJournals() {
+  const n = allJournals().filter(j=>j.type==='GJ'||j.type!=='ADJ'&&j.type!=='CL').length;
+  if (n===0) { toast('Tidak ada jurnal umum untuk dihapus','info'); return; }
+  if (!confirm(`Hapus SEMUA ${n} jurnal umum untuk ${activeCo().name}?\n\nJurnal penyesuaian & penutup TIDAK terhapus.\nDisarankan klik "Simpan Sesi" dulu sebagai backup.\n\nLanjutkan?`)) return;
+  DB.journals[DB.activeCoId] = allJournals().filter(j=>j.type==='ADJ'||j.type==='CL');
+  refreshAll();
+  toast(`${n} jurnal umum dihapus`,'ok');
+}
+function deleteAllJournalsAll() {
+  const n = allJournals().length;
+  if (n===0) { toast('Tidak ada jurnal untuk dihapus','info'); return; }
+  if (!confirm(`⚠️ Hapus SEMUA ${n} jurnal (umum + penyesuaian + penutup) untuk ${activeCo().name}?\n\nIni akan mengosongkan seluruh transaksi perusahaan ini.\nDisarankan klik "Simpan Sesi" dulu sebagai backup.\n\nLanjutkan?`)) return;
+  DB.journals[DB.activeCoId] = [];
+  refreshAll();
+  toast(`${n} jurnal dihapus — perusahaan dikosongkan`,'ok');
+}
+
+
+// ══════════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════════
+function exportSession() {
+  const blob = new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`akuntansi_${activeCo()?.name||'session'}_${today()}.json`;
+  a.click(); toast('Sesi berhasil disimpan','ok');
+}
+
+function importSession(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      DB = JSON.parse(e.target.result);
+      if (!DB.activeCoId) DB.activeCoId = DB.companies[0].id;
+      document.getElementById('splash').classList.add('out');
+      document.getElementById('app').classList.add('on');
+      refreshAll(); toast('Sesi berhasil diimport!','ok');
+    } catch(ex) { toast('File tidak valid','err'); }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+function exportJournalXlsx(type='') {
+  const js = activeJournals().filter(j=>!type||j.type===type);
+  const rows = [['Tanggal','No Voucher','Keterangan','Kode Akun','Nama Akun','Debit','Kredit','Tipe','Referensi']];
+  js.forEach(j=>j.lines.forEach(l=>rows.push([j.date,j.voucher,j.desc,l.acc,accName(l.acc),l.dr,l.cr,j.type,j.ref])));
+  downloadXlsx(rows,'Jurnal',`Jurnal_${activeCo().name}_${today()}.xlsx`);
+}
+
+function exportTBXlsx() {
+  const bal = computeBalances();
+  const rows = [['Kode','Nama Akun','Tipe','Debit','Kredit','Saldo']];
+  activeCOA().forEach(a=>{
+    const b=bal[a.code]||{dr:0,cr:0};
+    const s=computeSaldo(a,bal);
+    if(b.dr||b.cr||s) rows.push([a.code,a.name,a.type,b.dr,b.cr,s]);
+  });
+  downloadXlsx(rows,'Trial Balance',`TB_${activeCo().name}_${today()}.xlsx`);
+}
+
+function exportCOAXlsx() {
+  const rows = [['Kode Akun','Nama Akun','Tipe','Sub-Tipe','Normal (D/K)','Kode CF']];
+  activeCOA().forEach(a=>rows.push([a.code,a.name,a.type,a.subtype,a.normal,a.cf]));
+  downloadXlsx(rows,'COA',`COA_${activeCo().name}_${today()}.xlsx`);
+}
+
+function exportLedgerXlsx() {
+  const code = document.getElementById('ledgerAccSel').value;
+  if(!code){toast('Pilih akun dulu','err');return;}
+  const {rows} = computeLedger(code);
+  const hdr = [['Tanggal','No Voucher','Keterangan','Debit','Kredit','Saldo']];
+  downloadXlsx([...hdr,...rows.map(r=>[r.date,r.voucher,r.desc,r.dr,r.cr,r.saldo])],
+    'Buku Besar',`BB_${code}_${today()}.xlsx`);
+}
+
+function exportNeracaXlsx() { toast('Export Neraca dalam pengembangan','info'); }
+function exportLRXlsx() { toast('Export L/R dalam pengembangan','info'); }
+function exportAKXlsx() { toast('Export Arus Kas dalam pengembangan','info'); }
+
+function downloadXlsx(rows, sheetName, filename) {
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,sheetName);
+  XLSX.writeFile(wb,filename);
+}
+
+// ══════════════════════════════════════════════════
+// IMPORT CSV (format ringan — pengganti Excel)
+// ══════════════════════════════════════════════════
+// Parser CSV sederhana yang menangani tanda kutip dan pemisah , atau ;
+function parseCSV(text) {
+  const rows = [];
+  text = text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  // deteksi delimiter pada baris pertama
+  const first = text.split('\n')[0] || '';
+  const delim = (first.split(';').length > first.split(',').length) ? ';' : ',';
+  let row=[], cell='', inQ=false;
+  for (let i=0;i<text.length;i++){
+    const c=text[i];
+    if (inQ){
+      if (c==='"'){ if (text[i+1]==='"'){cell+='"';i++;} else inQ=false; }
+      else cell+=c;
+    } else {
+      if (c==='"') inQ=true;
+      else if (c===delim){ row.push(cell); cell=''; }
+      else if (c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=''; }
+      else cell+=c;
+    }
+  }
+  if (cell!==''||row.length){ row.push(cell); rows.push(row); }
+  return rows.filter(r=>r.some(x=>String(x).trim()!==''));
+}
+
+function handleCsvUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    let rows;
+    try { rows = parseCSV(String(e.target.result)); }
+    catch(ex){ toast('File CSV tidak terbaca','err'); return; }
+    input.value='';
+    ingestRows(rows, 'CSV');
+  };
+  reader.readAsText(file);
+}
+
+// ── Pipeline impor bersama (dipakai CSV & Excel) ──
+// ══════════════════════════════════════════════════
+// UPLOAD & TEMPLATE CSV PER SUB-MENU (tidak tercampur)
+// ══════════════════════════════════════════════════
+function coNameSlug() { const c = activeCo(); return c ? c.name.replace(/[^a-z0-9]+/gi,'_') : 'Data'; }
+
+// — Jurnal Umum / Penyesuaian —
+function journalCsvUpload(input, type) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    let rows;
+    try { rows = parseCSV(String(e.target.result)); }
+    catch(ex){ toast('File CSV tidak terbaca','err'); return; }
+    input.value='';
+    ingestRows(rows, type==='ADJ' ? 'CSV Penyesuaian' : 'CSV Jurnal Umum', type==='ADJ'?'ADJ':'GJ');
+  };
+  reader.readAsText(file);
+}
+
+function downloadJournalTemplate(type) {
+  const t = type==='ADJ' ? 'ADJ' : 'GJ';
+  const yr = new Date().getFullYear();
+  const today = new Date().toISOString().split('T')[0];
+  const vch = (t==='ADJ' ? 'JP' : 'JU') + '/0001/' + yr;
+  const ket = t==='ADJ' ? 'Contoh: penyusutan bulan ini' : 'Contoh: penjualan tunai';
+  const rows = [
+    ['Tanggal','No Voucher','Keterangan','Kode Akun','Debit','Kredit','Tipe','Referensi'],
+    [today, vch, ket, 'ISI_KODE_AKUN_DEBIT', 1000000, 0, t, 'REF-1'],
+    [today, vch, ket, 'ISI_KODE_AKUN_KREDIT', 0, 1000000, t, 'REF-1'],
+  ];
+  downloadCSV(rows, `Template_${t==='ADJ'?'Jurnal_Penyesuaian':'Jurnal_Umum'}_${coNameSlug()}.csv`);
+  toast('Template diunduh. Satu voucher = beberapa baris bernomor sama; Debit harus = Kredit.','ok');
+}
+
+// — Chart of Accounts —
+function downloadCOATemplate() {
+  const rows = [
+    ['Kode Akun','Nama Akun','Tipe','Sub-Tipe','Normal (D/K)','Arus Kas (CFO/CFI/CFF)'],
+    ['1110.01','Kas Kecil','Aset','Aset Lancar','D','CFO'],
+    ['1210.01','Bank - Rekening Operasional','Aset','Aset Lancar','D','CFO'],
+    ['1410.01','Persediaan Barang Dagang','Aset','Aset Lancar','D','CFO'],
+    ['1710.01','Aset Tetap - Peralatan','Aset','Aset Tidak Lancar','D','CFI'],
+    ['2110.00','Utang Usaha','Kewajiban','Kewajiban Lancar','K','CFO'],
+    ['3110.01','Modal Disetor','Ekuitas','Modal','K','CFF'],
+    ['3210.00','Laba Ditahan','Ekuitas','Laba Ditahan','K','CFF'],
+    ['4110.01','Pendapatan Penjualan','Pendapatan','Pendapatan Usaha','K','CFO'],
+    ['5110.00','Beban Pokok Penjualan','Beban','Beban Pokok','D','CFO'],
+    ['6510.02','Beban Gaji & Tunjangan','Beban','Beban Umum & Adm','D','CFO'],
+  ];
+  downloadCSV(rows, `Template_COA_${coNameSlug()}.csv`);
+  toast('Template COA diunduh. Tipe: Aset/Kewajiban/Ekuitas/Pendapatan/Beban.','ok');
+}
+
+function handleCOACsvUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    let rows;
+    try { rows = parseCSV(String(e.target.result)); }
+    catch(ex){ toast('File CSV tidak terbaca','err'); return; }
+    input.value='';
+    let added=0, updated=0, skipped=0;
+    const validTypes = ['Aset','Kewajiban','Ekuitas','Pendapatan','Beban'];
+    rows.slice(1).forEach(r=>{
+      const code = String(r[0]||'').trim(), name = String(r[1]||'').trim();
+      if (!code || !name) { skipped++; return; }
+      let type = String(r[2]||'').trim();
+      if (!validTypes.includes(type)) type = (inferAccountFromCode(code).type);
+      let subtype = String(r[3]||'').trim();
+      if (!subtype || !(COA_SUBTYPES[type]||[]).includes(subtype)) subtype = (COA_SUBTYPES[type]||['Aset Lancar'])[0];
+      let nm = String(r[4]||'').trim().toUpperCase();
+      const normal = (nm==='K'||nm==='KREDIT'||nm==='CREDIT') ? 'K'
+                   : (nm==='D'||nm==='DEBIT') ? 'D'
+                   : (['Aset','Beban'].includes(type) ? 'D' : 'K');
+      let cf = String(r[5]||'').trim().toUpperCase(); cf = ['CFO','CFI','CFF'].includes(cf) ? cf : '';
+      const ex = getCOA(code);
+      if (ex) { Object.assign(ex, {name,type,subtype,normal,cf}); updated++; }
+      else { DB.coa[DB.activeCoId].push({code,name,type,subtype,normal,cf}); added++; }
+    });
+    DB.coa[DB.activeCoId].sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+    renderCOATable(); populateLedgerSel(); saveDB();
+    toast(`Import COA selesai: ${added} akun baru, ${updated} diperbarui${skipped?`, ${skipped} dilewati`:''}`, 'ok');
+  };
+  reader.readAsText(file);
+}
+
+function deleteAllAdj() {
+  const list = DB.journals[DB.activeCoId]||[];
+  const n = list.filter(j=>j.type==='ADJ').length;
+  if (n===0) { toast('Tidak ada jurnal penyesuaian untuk dihapus','info'); return; }
+  if (!confirm(`Hapus SEMUA ${n} jurnal penyesuaian untuk ${activeCo().name}?\n\nJurnal umum & penutup TIDAK terhapus.\nDisarankan klik "Simpan Sesi" dulu sebagai backup.\n\nLanjutkan?`)) return;
+  DB.journals[DB.activeCoId] = list.filter(j=>j.type!=='ADJ');
+  refreshAll();
+  toast(`${n} jurnal penyesuaian dihapus`,'ok');
+}
+
+// Kolom: Tanggal | No Voucher | Keterangan | Kode Akun | Debit | Kredit | Tipe | Referensi
+// forceType (opsional): paksa semua jurnal jadi 'GJ' atau 'ADJ' (dipakai upload per sub-menu agar tidak tercampur)
+function ingestRows(rows, source, forceType) {
+  let imported=0, skipped=0; const groups={}; const unknown=new Set();
+  (rows||[]).slice(1).forEach(r=>{
+    const tgl=r[0], kode=r[3];
+    if (tgl==null||kode==null||String(tgl).trim()===''||String(kode).trim()===''){ skipped++; return; }
+    const date = parseExcelDate(tgl); if (!date){ skipped++; return; }
+    const type = forceType || (String(r[6]||'GJ').trim().toUpperCase() || 'GJ');
+    const voucher = String(r[1]||'').trim() || autoVoucher(type);
+    const desc = String(r[2]||'').trim();
+    const acc = String(kode).trim();
+    const dr = parseNum(r[4]); const cr = parseNum(r[5]);
+    const ref = String(r[7]||'').trim();
+    if (!getCOA(acc)) unknown.add(acc);
+    const key = `${voucher}__${date}`;
+    if (!groups[key]) groups[key] = {id:uid(),date,voucher,desc,type,ref,lines:[]};
+    groups[key].lines.push({acc, desc, dr, cr});
+    imported++;
+  });
+
+  // Auto-buat akun yang belum ada di COA (penyebab utama selisih: baris ke akun
+  // tak dikenal tidak ikut tertotal di TB/Neraca). Tipe ditebak dari kode.
+  const created=[];
+  unknown.forEach(code=>{
+    if (getCOA(code)) return;
+    const a = inferAccountFromCode(code);
+    DB.coa[DB.activeCoId].push(a); created.push(a);
+  });
+  if (created.length) DB.coa[DB.activeCoId].sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+
+  const all = Object.values(groups);
+  const valid = all.filter(j=>j.lines.length>=2);
+  const singles = all.length - valid.length;
+  let totDr=0, totCr=0; const unbal=[];
+  valid.forEach(j=>{
+    const d=j.lines.reduce((s,l)=>s+(l.dr||0),0), c=j.lines.reduce((s,l)=>s+(l.cr||0),0);
+    totDr+=d; totCr+=c;
+    if (Math.abs(d-c)>=1) unbal.push({voucher:j.voucher,date:j.date,d,c,selisih:d-c});
+    DB.journals[DB.activeCoId].push(j);
+  });
+  refreshAll();
+  showImportReport({source, jurnal:valid.length, baris:imported, skipped, singles, totDr, totCr, created, unbal});
+}
+
+function showImportReport(rep) {
+  const sel = rep.totDr - rep.totCr;
+  const balanced = Math.abs(sel) < 1;
+  let html = `<div class="ir-grid">
+      <div class="ir-stat"><div class="ir-l">Jurnal masuk</div><div class="ir-v">${rep.jurnal}</div></div>
+      <div class="ir-stat"><div class="ir-l">Baris diproses</div><div class="ir-v">${rep.baris}</div></div>
+      <div class="ir-stat"><div class="ir-l">Dilewati</div><div class="ir-v">${rep.skipped}</div></div>
+    </div>
+    <table class="ir-tbl"><tbody>
+      <tr><td>Total Debit</td><td class="r">${fmtFull(rep.totDr)}</td></tr>
+      <tr><td>Total Kredit</td><td class="r">${fmtFull(rep.totCr)}</td></tr>
+      <tr class="${balanced?'ir-ok':'ir-bad'}"><td><b>Selisih (Debit − Kredit)</b></td><td class="r"><b>${fmtFull(sel)}</b> &nbsp;${balanced?'✓ Seimbang':'✗ TIDAK SEIMBANG'}</td></tr>
+    </tbody></table>`;
+
+  if (rep.created.length) {
+    html += `<div class="ir-warn"><b>${rep.created.length} akun dibuat otomatis</b> — kodenya tidak ada di COA, jadi dibuatkan agar nilainya ikut terhitung (tidak lagi jadi sumber selisih). Mohon cek tipe & namanya di menu <b>Chart of Accounts</b>:<br><div style="margin-top:6px">${rep.created.map(a=>`<span class="badge badge-gold" style="margin:2px 4px 2px 0;display:inline-block">${a.code} → ${a.type}/${a.subtype}</span>`).join('')}</div></div>`;
+  }
+  if (rep.unbal.length) {
+    html += `<div class="ir-warn ir-warn-red"><b>${rep.unbal.length} voucher tidak balance</b> (Debit ≠ Kredit pada sumber data — perbaiki di file lalu impor ulang):
+      <table class="ir-tbl" style="margin-top:8px"><thead><tr><th>Voucher</th><th>Tanggal</th><th class="r">Debit</th><th class="r">Kredit</th><th class="r">Selisih</th></tr></thead><tbody>
+      ${rep.unbal.slice(0,40).map(u=>`<tr><td>${u.voucher}</td><td>${u.date}</td><td class="r">${fmtFull(u.d)}</td><td class="r">${fmtFull(u.c)}</td><td class="r" style="color:var(--red);font-weight:600">${fmtFull(u.selisih)}</td></tr>`).join('')}
+      </tbody></table>${rep.unbal.length>40?`<div style="font-size:11px;color:var(--slate);margin-top:4px">…dan ${rep.unbal.length-40} voucher lainnya</div>`:''}</div>`;
+  }
+  if (rep.singles) {
+    html += `<div class="ir-warn">${rep.singles} voucher hanya berisi 1 baris sehingga tidak diimpor — jurnal butuh minimal 2 baris (debit & kredit).</div>`;
+  }
+  if (balanced && !rep.created.length && !rep.unbal.length && !rep.singles) {
+    html += `<div class="ir-warn ir-warn-ok">Semua data terimpor seimbang dan seluruh kode akun cocok dengan COA. Tidak ada masalah terdeteksi. 🎉</div>`;
+  }
+  const body = document.getElementById('import-report-body');
+  if (body) body.innerHTML = html;
+  const modal = document.getElementById('modalImport');
+  if (modal) modal.classList.add('on');
+  toast(`Import ${rep.source}: ${rep.jurnal} jurnal · selisih ${fmtFull(sel)} ${balanced?'(seimbang ✓)':'✗'}`, balanced?'ok':'err');
+}
+
+function gotoTB() {
+  const el = [...document.querySelectorAll('.sb-item')].find(n=>/'tb'/.test(n.getAttribute('onclick')||''));
+  if (el) show('tb', el);
+}
+
+// ══════════════════════════════════════════════════
+// SALDO AWAL OTOMATIS (Opening Balance / Jurnal Pembukaan)
+// ══════════════════════════════════════════════════
+function generateOpeningBalance(fromYear, toYear) {
+  fromYear = String(fromYear); toYear = String(toYear);
+  if (!fromYear || !toYear) { toast('Pilih tahun asal dan tahun tujuan','err'); return; }
+  const coa = activeCOA();
+  const reAcc = coa.find(a=>a.type==='Ekuitas' && a.subtype==='Laba Ditahan');
+  if (!reAcc) { toast('COA tidak punya akun "Laba Ditahan" — tambahkan dulu','err'); return; }
+  // Saldo akhir SELURUH akun riil per 31 Des tahun asal
+  const bal = rawCumulativeBalances(`${fromYear}-12`);
+  let dr=0, cr=0; const lines=[];
+  coa.forEach(a=>{
+    // Akun nominal (Pendapatan/Beban) di-nol-kan; labanya digulung ke Laba Ditahan
+    if (a.type==='Pendapatan' || a.type==='Beban') return;
+    if (a.code===reAcc.code) return; // Laba Ditahan jadi penyeimbang di akhir
+    const s = Math.round(computeSaldo(a, bal)); // bertanda pada sisi normalnya
+    if (Math.abs(s) < 0.5) return;
+    if (a.normal==='D') {
+      if (s>=0){ lines.push({acc:a.code,desc:'Saldo awal',dr:s,cr:0}); dr+=s; }
+      else { lines.push({acc:a.code,desc:'Saldo awal',dr:0,cr:-s}); cr+=-s; }
+    } else {
+      if (s>=0){ lines.push({acc:a.code,desc:'Saldo awal',dr:0,cr:s}); cr+=s; }
+      else { lines.push({acc:a.code,desc:'Saldo awal',dr:-s,cr:0}); dr+=-s; }
+    }
+  });
+  // Laba Ditahan = penyeimbang = (saldo LD lama) + (akumulasi laba s.d. tahun asal) + sisa pembulatan
+  const reNeeded = dr - cr; // jika positif → butuh kredit di Laba Ditahan
+  if (reNeeded >= 0) lines.push({acc:reAcc.code,desc:'Laba ditahan + laba tahun berjalan (carry-over)',dr:0,cr:Math.round(reNeeded)});
+  else lines.push({acc:reAcc.code,desc:'Akumulasi defisit (carry-over)',dr:Math.round(-reNeeded),cr:0});
+
+  if (lines.length===0) { toast(`Tidak ada saldo untuk dibawa dari ${fromYear}`,'info'); return; }
+  // Hapus OB lama untuk tahun tujuan agar tidak dobel
+  DB.journals[DB.activeCoId] = (DB.journals[DB.activeCoId]||[]).filter(j=>!(j.type==='OB' && (j.date||'').slice(0,4)===toYear));
+  DB.journals[DB.activeCoId].push({
+    id:uid(), date:`${toYear}-01-01`, voucher:`OB-${toYear}`,
+    desc:`Saldo Awal ${toYear} — carry-over dari ${fromYear}`, type:'OB', ref:'AUTO', lines
+  });
+  refreshAll();
+  toast(`✓ Saldo awal ${toYear} dibuat (${lines.length} akun). Pilih tab Tahun ${toYear} untuk melihat neraca yang sudah seimbang.`,'ok');
+}
+
+function renderSaldoAwal() {
+  const sel1 = document.getElementById('obFromYear');
+  const sel2 = document.getElementById('obToYear');
+  if (sel1 && sel2) {
+    const years = availableYears();
+    const allOpts = years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    const future = years.length ? String(+years[years.length-1]+1) : String(new Date().getFullYear());
+    sel1.innerHTML = allOpts || `<option value="${new Date().getFullYear()-1}">${new Date().getFullYear()-1}</option>`;
+    sel2.innerHTML = (years.slice(1).map(y=>`<option value="${y}">${y}</option>`).join('')) + `<option value="${future}">${future}</option>`;
+    if (years.length>=2){ sel1.value=years[years.length-2]; sel2.value=years[years.length-1]; }
+  }
+  const list = document.getElementById('ob-list');
+  if (list) {
+    const obs = (DB.journals[DB.activeCoId]||[]).filter(j=>j.type==='OB').sort((a,b)=>a.date.localeCompare(b.date));
+    if (!obs.length) { list.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--slate)">Belum ada jurnal saldo awal. Buat di panel kiri.</td></tr>'; }
+    else list.innerHTML = obs.map(j=>{
+      const tot = j.lines.reduce((s,l)=>s+(l.dr||0),0);
+      return `<tr><td>${j.date}</td><td><span class="badge badge-blue">${j.voucher}</span></td>
+        <td class="r">${fmt(tot)}</td>
+        <td><button class="tb-btn tb-danger" style="padding:3px 8px;font-size:10px" onclick="deleteJournal('${j.id}')">Hapus</button></td></tr>`;
+    }).join('');
+  }
+}
+
+// ══════════════════════════════════════════════════
+// LAPORAN KOMPARATIF 2 PERIODE
+// ══════════════════════════════════════════════════
+function summaryFromBal(bal) {
+  const coa = activeCOA();
+  const sumAbs = (t,s) => coa.filter(a=>a.type===t&&(s?a.subtype===s:true)).reduce((x,a)=>x+Math.abs(computeSaldo(a,bal)),0);
+  const asetLancar=sumAbs('Aset','Aset Lancar'), asetTetap=sumAbs('Aset','Aset Tidak Lancar');
+  const totalAset=asetLancar+asetTetap;
+  const kwjLancar=sumAbs('Kewajiban','Kewajiban Lancar'), kwjPanjang=sumAbs('Kewajiban','Kewajiban Tidak Lancar');
+  const totalKwj=kwjLancar+kwjPanjang;
+  const laba=netIncomeFromBal(bal);
+  const ekuitas=coa.filter(a=>a.type==='Ekuitas').reduce((x,a)=>x+computeSaldo(a,bal),0)+laba;
+  const pendUsaha=coa.filter(a=>a.type==='Pendapatan'&&a.subtype==='Pendapatan Usaha').reduce((x,a)=>x+computeSaldo(a,bal),0);
+  const pendLain=coa.filter(a=>a.type==='Pendapatan'&&a.subtype!=='Pendapatan Usaha').reduce((x,a)=>x+computeSaldo(a,bal),0);
+  const totalPend=pendUsaha+pendLain;
+  const bebanPokok=sumAbs('Beban','Beban Pokok');
+  const bebanOp=sumAbs('Beban','Beban Umum & Adm')+sumAbs('Beban','Beban Penjualan')+sumAbs('Beban','Penyusutan & Amortisasi');
+  const totalBeban=coa.filter(a=>a.type==='Beban').reduce((x,a)=>x+Math.abs(computeSaldo(a,bal)),0);
+  const labaKotor=pendUsaha-bebanPokok, labaOp=labaKotor-bebanOp;
+  const kas=coa.filter(a=>a.subtype==='Aset Lancar'&&(a.name.toLowerCase().includes('kas')||a.name.toLowerCase().includes('bank'))).reduce((x,a)=>x+computeSaldo(a,bal),0);
+  return {asetLancar,asetTetap,totalAset,kwjLancar,kwjPanjang,totalKwj,ekuitas,pendUsaha,pendLain,totalPend,bebanPokok,bebanOp,totalBeban,labaKotor,labaOp,labaBersih:laba,kas};
+}
+
+function populateKomparatif() {
+  const years = availableYears();
+  const a=document.getElementById('kompA'), b=document.getElementById('kompB');
+  if (!a||!b) return;
+  const opts = '<option value="">Semua</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  a.innerHTML=opts; b.innerHTML=opts;
+  if (years.length>=2){ a.value=years[years.length-2]; b.value=years[years.length-1]; }
+  else if (years.length===1){ a.value=''; b.value=years[0]; }
+}
+
+function variancePill(cur, prev) {
+  const d = cur - prev;
+  let pct = prev!==0 ? (d/Math.abs(prev))*100 : (cur!==0?100:0);
+  const cls = d>=0 ? 'pos':'neg';
+  const arrow = d>0?'▲':d<0?'▼':'–';
+  return `<td class="r ${cls}">${fmt(d)}</td><td class="r ${cls}" style="font-size:11px">${arrow} ${Math.abs(pct).toFixed(1)}%</td>`;
+}
+
+function renderKomparatif() {
+  const ya=document.getElementById('kompA')?.value??'';
+  const yb=document.getElementById('kompB')?.value??'';
+  const balA=balancesForScope(ya), balB=balancesForScope(yb);
+  const A=summaryFromBal(balA), B=summaryFromBal(balB);
+  const labA = ya||'Semua', labB = yb||'Semua';
+  const out=document.getElementById('komparatif-output');
+  if (!out) return;
+
+  const row=(label,a,b,strong)=>`<tr class="${strong?'tr-total':''}">
+      <td${strong?'':' style="padding-left:28px;font-size:12px;color:var(--slate)"'}>${label}</td>
+      <td class="r">${fmt(a)}</td><td class="r">${fmt(b)}</td>${variancePill(b,a)}</tr>`;
+  const sect=(t)=>`<tr class="tr-section"><td colspan="5">${t}</td></tr>`;
+
+  out.innerHTML = `
+  <div class="tbl-card" style="margin-bottom:18px">
+    <div class="tbl-hd"><div class="tbl-title">Ringkasan Komparatif: ${labA} vs ${labB}</div><span class="badge badge-gold">Δ = ${labB} − ${labA}</span></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Pos</th><th class="r">${labA}</th><th class="r">${labB}</th><th class="r">Δ Rp</th><th class="r">Δ %</th></tr></thead>
+      <tbody>
+        ${sect('KINERJA (LABA RUGI)')}
+        ${row('Pendapatan Usaha',A.pendUsaha,B.pendUsaha)}
+        ${row('Beban Pokok',A.bebanPokok,B.bebanPokok)}
+        ${row('Laba Kotor',A.labaKotor,B.labaKotor,true)}
+        ${row('Beban Operasi',A.bebanOp,B.bebanOp)}
+        ${row('Laba Operasi',A.labaOp,B.labaOp,true)}
+        ${row('Laba Bersih',A.labaBersih,B.labaBersih,true)}
+        ${sect('POSISI KEUANGAN (NERACA)')}
+        ${row('Aset Lancar',A.asetLancar,B.asetLancar)}
+        ${row('Aset Tidak Lancar',A.asetTetap,B.asetTetap)}
+        ${row('Jumlah Aset',A.totalAset,B.totalAset,true)}
+        ${row('Kewajiban Lancar',A.kwjLancar,B.kwjLancar)}
+        ${row('Kewajiban Jk. Panjang',A.kwjPanjang,B.kwjPanjang)}
+        ${row('Total Kewajiban',A.totalKwj,B.totalKwj,true)}
+        ${row('Total Ekuitas',A.ekuitas,B.ekuitas,true)}
+        ${sect('LIKUIDITAS')}
+        ${row('Kas & Bank',A.kas,B.kas)}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="chart-grid cg-2">
+    <div class="cc"><div class="cc-hd"><div><div class="cc-title">Pendapatan vs Laba Bersih</div><div class="cc-sub">${labA} vs ${labB}</div></div></div><canvas id="c-komp-rev"></canvas></div>
+    <div class="cc"><div class="cc-hd"><div><div class="cc-title">Aset vs Kewajiban + Ekuitas</div><div class="cc-sub">Struktur posisi keuangan</div></div></div><canvas id="c-komp-bs"></canvas></div>
+  </div>`;
+
+  setTimeout(()=>{
+    mkChart('c-komp-rev','bar',[labA,labB],[
+      {label:'Pendapatan',data:[A.totalPend,B.totalPend],backgroundColor:'#c9a84c'},
+      {label:'Laba Bersih',data:[A.labaBersih,B.labaBersih],backgroundColor:'#2d6a4f'}
+    ],true);
+    mkChart('c-komp-bs','bar',[labA,labB],[
+      {label:'Aset',data:[A.totalAset,B.totalAset],backgroundColor:'#1e40af'},
+      {label:'Kewajiban',data:[A.totalKwj,B.totalKwj],backgroundColor:'#b5282b'},
+      {label:'Ekuitas',data:[A.ekuitas,B.ekuitas],backgroundColor:'#c9a84c'}
+    ],true);
+  },50);
+}
+
+// ══════════════════════════════════════════════════
+// EKSPOR PRESENTASI HTML (untuk Direksi & Investor)
+// ══════════════════════════════════════════════════
+const fmtFull = n => {
+  if (n===null||n===undefined||isNaN(n)) return '—';
+  const neg = n<0; const s = Math.round(Math.abs(n)).toLocaleString('id-ID');
+  return (neg?'(':'')+'Rp '+s+(neg?')':'');
+};
+
+function buildStatementRowsHTML(bal) {
+  const coa=activeCOA();
+  const line=(a)=>{const s=computeSaldo(a,bal);return s!==0?`<tr><td class="ln">${a.name}</td><td class="num">${fmtFull(Math.abs(s))}</td></tr>`:'';};
+  const block=(t,sub)=>coa.filter(a=>a.type===t&&a.subtype===sub).map(line).join('');
+  const S=summaryFromBal(bal);
+  const neraca=`
+    <tr class="sec"><td colspan="2">ASET LANCAR</td></tr>${block('Aset','Aset Lancar')}
+    <tr class="sub"><td>Jumlah Aset Lancar</td><td class="num">${fmtFull(S.asetLancar)}</td></tr>
+    <tr class="sec"><td colspan="2">ASET TIDAK LANCAR</td></tr>${block('Aset','Aset Tidak Lancar')}
+    <tr class="sub"><td>Jumlah Aset Tidak Lancar</td><td class="num">${fmtFull(S.asetTetap)}</td></tr>
+    <tr class="tot"><td>JUMLAH ASET</td><td class="num">${fmtFull(S.totalAset)}</td></tr>
+    <tr class="sec"><td colspan="2">KEWAJIBAN</td></tr>${block('Kewajiban','Kewajiban Lancar')}${block('Kewajiban','Kewajiban Tidak Lancar')}
+    <tr class="sub"><td>Total Kewajiban</td><td class="num">${fmtFull(S.totalKwj)}</td></tr>
+    <tr class="sec"><td colspan="2">EKUITAS</td></tr>${block('Ekuitas','Modal')}${block('Ekuitas','Laba Ditahan')}
+    <tr class="ln"><td class="ln">Laba (Rugi) Berjalan</td><td class="num">${fmtFull(S.labaBersih)}</td></tr>
+    <tr class="sub"><td>Total Ekuitas</td><td class="num">${fmtFull(S.ekuitas)}</td></tr>
+    <tr class="tot"><td>JUMLAH KEWAJIBAN & EKUITAS</td><td class="num">${fmtFull(S.totalKwj+S.ekuitas)}</td></tr>`;
+  const lr=`
+    <tr class="sec"><td colspan="2">PENDAPATAN</td></tr>${block('Pendapatan','Pendapatan Usaha')}
+    <tr class="sub"><td>Total Pendapatan Usaha</td><td class="num">${fmtFull(S.pendUsaha)}</td></tr>
+    <tr class="sec"><td colspan="2">BEBAN POKOK</td></tr>${block('Beban','Beban Pokok')}
+    <tr class="tot"><td>LABA KOTOR</td><td class="num">${fmtFull(S.labaKotor)}</td></tr>
+    <tr class="sec"><td colspan="2">BEBAN OPERASIONAL</td></tr>${block('Beban','Beban Umum & Adm')}${block('Beban','Beban Penjualan')}${block('Beban','Penyusutan & Amortisasi')}
+    <tr class="tot"><td>LABA OPERASI</td><td class="num">${fmtFull(S.labaOp)}</td></tr>
+    <tr class="sec"><td colspan="2">LAIN-LAIN & PAJAK</td></tr>${block('Pendapatan','Pendapatan Lain')}${block('Beban','Beban Lain')}${block('Beban','Beban Pajak')}
+    <tr class="tot grand"><td>LABA (RUGI) BERSIH</td><td class="num">${fmtFull(S.labaBersih)}</td></tr>`;
+  return {neraca, lr, S};
+}
+
+function exportPresentationHTML() {
+  const co = activeCo();
+  if (!co) { toast('Tidak ada perusahaan aktif','err'); return; }
+  const years = availableYears();
+  if (!years.length) { toast('Belum ada data untuk presentasi','err'); return; }
+  // Bandingkan dua tahun terakhir jika ada; jika tidak, pakai scope aktif
+  const yB = years[years.length-1];
+  const yA = years.length>=2 ? years[years.length-2] : '';
+  const balB = balancesForScope(yB), balA = yA?balancesForScope(yA):null;
+  const stB = buildStatementRowsHTML(balB);
+  const SB = stB.S, SA = balA?summaryFromBal(balA):null;
+  const labB = yB, labA = yA||'—';
+
+  // Tren bulanan tahun terbaru
+  const months=[...new Set(journalsForScope(yB).map(j=>j.date.slice(0,7)))].sort();
+  const revSeries=months.map(m=>{const b=balancesForScope(yB,m);return Math.round(summaryFromBal(b).totalPend);});
+  const npSeries=months.map(m=>{const b=balancesForScope(yB,m);return Math.round(summaryFromBal(b).labaBersih);});
+
+  const kpi=(lbl,val,sub)=>`<div class="k"><div class="kl">${lbl}</div><div class="kv">${val}</div><div class="ks">${sub||''}</div></div>`;
+  const vRow=(label,a,b)=>{const d=b-a;const pct=a!==0?(d/Math.abs(a)*100):(b!==0?100:0);const cls=d>=0?'up':'down';
+    return `<tr><td>${label}</td><td class="num">${fmtFull(a)}</td><td class="num">${fmtFull(b)}</td><td class="num ${cls}">${d>=0?'+':''}${fmtFull(d)} (${pct.toFixed(1)}%)</td></tr>`;};
+
+  const today_ = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  const compSection = SA ? `
+  <section class="slide">
+    <div class="slide-tag">Analisis Komparatif</div>
+    <h2>Perbandingan Kinerja ${labA} vs ${labB}</h2>
+    <table class="comp"><thead><tr><th>Indikator</th><th class="num">${labA}</th><th class="num">${labB}</th><th class="num">Perubahan</th></tr></thead>
+    <tbody>
+      ${vRow('Pendapatan Usaha',SA.pendUsaha,SB.pendUsaha)}
+      ${vRow('Laba Kotor',SA.labaKotor,SB.labaKotor)}
+      ${vRow('Laba Operasi',SA.labaOp,SB.labaOp)}
+      ${vRow('Laba Bersih',SA.labaBersih,SB.labaBersih)}
+      ${vRow('Jumlah Aset',SA.totalAset,SB.totalAset)}
+      ${vRow('Total Ekuitas',SA.ekuitas,SB.ekuitas)}
+      ${vRow('Kas & Bank',SA.kas,SB.kas)}
+    </tbody></table>
+    <div class="charts"><div class="cc"><canvas id="pc1"></canvas></div><div class="cc"><canvas id="pc2"></canvas></div></div>
+  </section>`:'';
+
+  const html = `<!doctype html><html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laporan Keuangan — ${co.name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>
+<style>
+:root{--coal:#1a2332;--gold:#c9a84c;--paper:#f5f0e8;--slate:#64748b;--green:#2d6a4f;--red:#b5282b;--line:#e7ddca;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#ece4d6;color:var(--coal);line-height:1.5}
+.deck{max-width:1080px;margin:0 auto;padding:24px}
+.slide{background:#fff;border-radius:16px;padding:48px 56px;margin:0 0 26px;box-shadow:0 10px 40px rgba(26,35,50,.10);border-top:5px solid var(--gold)}
+.cover{background:var(--coal);color:#fff;text-align:center;padding:90px 56px;border-top:5px solid var(--gold)}
+.cover .brand{font-size:12px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:30px}
+.cover h1{font-family:'Playfair Display',serif;font-size:46px;font-weight:900;margin-bottom:10px}
+.cover .meta{color:rgba(255,255,255,.55);font-size:15px;margin-top:6px}
+.cover .conf{margin-top:40px;display:inline-block;border:1px solid rgba(201,168,76,.5);color:var(--gold);padding:7px 20px;border-radius:30px;font-size:11px;letter-spacing:2px;text-transform:uppercase}
+.slide-tag{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:8px}
+h2{font-family:'Playfair Display',serif;font-size:28px;margin-bottom:24px;font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:8px}
+.k{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px 16px}
+.kl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--slate);margin-bottom:8px}
+.kv{font-family:'Playfair Display',serif;font-size:23px;font-weight:700}
+.ks{font-size:11px;color:var(--slate);margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--slate);padding:10px 12px;border-bottom:2px solid var(--coal)}
+td{padding:7px 12px;border-bottom:1px solid #f0ebe0}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.sec td{background:var(--coal);color:var(--gold);font-weight:600;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+tr.sub td{font-weight:700;border-top:1px solid var(--line)}
+tr.tot td{font-weight:700;background:#faf6ee;border-top:2px solid var(--gold)}
+tr.grand td{background:var(--coal);color:#fff;font-size:15px}
+td.ln{padding-left:28px;color:#334155}
+.up{color:var(--green);font-weight:600}.down{color:var(--red);font-weight:600}
+table.comp th,table.comp td{padding:11px 14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px}
+.cc{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;height:280px}
+.foot{text-align:center;color:var(--slate);font-size:11px;padding:14px}
+@media print{body{background:#fff}.slide,.cover{box-shadow:none;page-break-after:always;border-radius:0}.deck{max-width:100%;padding:0}}
+</style></head><body>
+<div class="deck">
+  <section class="cover">
+    <div class="brand">Laporan Keuangan</div>
+    <h1>${co.name}</h1>
+    <div class="meta">${co.npwp?('NPWP '+co.npwp+' · '):''}Mata Uang ${co.currency||'IDR'} · ${co.industry||''}</div>
+    <div class="meta">Periode Pelaporan: Tahun Buku ${labB}${SA?(' (komparatif '+labA+')'):''}</div>
+    <div class="conf">Rahasia — untuk Direksi &amp; Investor</div>
+    <div class="meta" style="margin-top:30px;font-size:12px">Disiapkan ${today_}</div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-tag">Ringkasan Eksekutif · ${labB}</div>
+    <h2>Indikator Keuangan Utama</h2>
+    <div class="kpis">
+      ${kpi('Pendapatan',fmtFull(SB.totalPend),'Tahun '+labB)}
+      ${kpi('Laba Bersih',fmtFull(SB.labaBersih), SB.totalPend?('Margin '+(SB.labaBersih/SB.totalPend*100).toFixed(1)+'%'):'')}
+      ${kpi('Jumlah Aset',fmtFull(SB.totalAset),'Posisi akhir')}
+      ${kpi('Total Ekuitas',fmtFull(SB.ekuitas),'Posisi akhir')}
+      ${kpi('Kas & Bank',fmtFull(SB.kas),'Likuiditas')}
+      ${kpi('Total Kewajiban',fmtFull(SB.totalKwj),'Liabilitas')}
+      ${kpi('Laba Kotor',fmtFull(SB.labaKotor), SB.pendUsaha?('Margin '+(SB.labaKotor/SB.pendUsaha*100).toFixed(1)+'%'):'')}
+      ${kpi('DER', SB.ekuitas?(SB.totalKwj/SB.ekuitas).toFixed(2)+'x':'—','Kewajiban/Ekuitas')}
+    </div>
+    <div class="charts"><div class="cc"><canvas id="pcTrendRev"></canvas></div><div class="cc"><canvas id="pcTrendNp"></canvas></div></div>
+  </section>
+
+  ${compSection}
+
+  <section class="slide">
+    <div class="slide-tag">Tahun Buku ${labB}</div>
+    <h2>Laporan Posisi Keuangan &amp; Laba Rugi</h2>
+    <div class="two">
+      <div><table><thead><tr><th>Neraca</th><th class="num">Rp</th></tr></thead><tbody>${stB.neraca}</tbody></table></div>
+      <div><table><thead><tr><th>Laba Rugi</th><th class="num">Rp</th></tr></thead><tbody>${stB.lr}</tbody></table></div>
+    </div>
+  </section>
+
+  <div class="foot">${co.name} · Dihasilkan oleh AkunTansi Pro · ${today_}<br>Dokumen ini bersifat indikatif dan disusun untuk keperluan internal manajemen.</div>
+</div>
+<script>
+const F=v=>{const a=Math.abs(v);return a>=1e9?(v/1e9).toFixed(1)+' M':a>=1e6?(v/1e6).toFixed(0)+' Jt':v.toLocaleString('id-ID')};
+const baseOpts=t=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:t,position:'bottom',labels:{font:{size:11}}},title:{display:false}},scales:{y:{ticks:{callback:F,font:{size:10}}},x:{ticks:{font:{size:10}}}}});
+function mk(id,cfg){const el=document.getElementById(id);if(el&&window.Chart)new Chart(el,cfg);}
+mk('pcTrendRev',{type:'line',data:{labels:${JSON.stringify(months)},datasets:[{label:'Pendapatan kumulatif',data:${JSON.stringify(revSeries)},borderColor:'#c9a84c',backgroundColor:'rgba(201,168,76,.15)',fill:true,tension:.3}]},options:Object.assign(baseOpts(false),{plugins:{legend:{display:false},title:{display:true,text:'Tren Pendapatan ${labB}',font:{size:13}}}})});
+mk('pcTrendNp',{type:'line',data:{labels:${JSON.stringify(months)},datasets:[{label:'Laba bersih kumulatif',data:${JSON.stringify(npSeries)},borderColor:'#2d6a4f',backgroundColor:'rgba(45,106,79,.15)',fill:true,tension:.3}]},options:Object.assign(baseOpts(false),{plugins:{legend:{display:false},title:{display:true,text:'Tren Laba Bersih ${labB}',font:{size:13}}}})});
+${SA?`
+mk('pc1',{type:'bar',data:{labels:['${labA}','${labB}'],datasets:[{label:'Pendapatan',data:[${Math.round(SA.totalPend)},${Math.round(SB.totalPend)}],backgroundColor:'#c9a84c'},{label:'Laba Bersih',data:[${Math.round(SA.labaBersih)},${Math.round(SB.labaBersih)}],backgroundColor:'#2d6a4f'}]},options:baseOpts(true)});
+mk('pc2',{type:'bar',data:{labels:['${labA}','${labB}'],datasets:[{label:'Aset',data:[${Math.round(SA.totalAset)},${Math.round(SB.totalAset)}],backgroundColor:'#1e40af'},{label:'Kewajiban',data:[${Math.round(SA.totalKwj)},${Math.round(SB.totalKwj)}],backgroundColor:'#b5282b'},{label:'Ekuitas',data:[${Math.round(SA.ekuitas)},${Math.round(SB.ekuitas)}],backgroundColor:'#c9a84c'}]},options:baseOpts(true)});`:''}
+<\/script>
+</body></html>`;
+
+  const blob = new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Presentasi_${co.name.replace(/[^a-z0-9]+/gi,'_')}_${labB}_${today()}.html`;
+  a.click();
+  toast('✓ Presentasi HTML diekspor — siap dibuka & dipresentasikan ke direksi/investor.','ok');
+}
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function v(id) { const el=document.getElementById(id); return el?el.value.trim():''; }
+function today() { return new Date().toISOString().split('T')[0]; }
+function accName(code) { const a=getCOA(code); return a?a.name:''; }
+
+const fmt = n => {
+  if (n===null||n===undefined) return '—';
+  const abs=Math.abs(n);
+  if (abs>=1e12) return (n<0?'(':'')+(abs/1e12).toFixed(2)+'T'+(n<0?')':'');
+  if (abs>=1e9)  return (n<0?'(':'')+(abs/1e9).toFixed(2).replace(/\.?0+$/,'')+'M'+(n<0?')':'');
+  if (abs>=1e6)  return (n<0?'(':'')+(abs/1e6).toFixed(1)+'Jt'+(n<0?')':'');
+  if (abs>=1e3)  return (n<0?'(':'')+(abs/1e3).toFixed(0)+'rb'+(n<0?')':'');
+  return (n<0?'(':'') + Math.abs(n).toFixed(0) + (n<0?')':'');
+};
+
+function toast(msg, type='info') {
+  const t=document.getElementById('toast');
+  const d=document.createElement('div');
+  d.className=`toast-item toast-${type}`;
+  d.textContent=msg;
+  t.appendChild(d);
+  setTimeout(()=>d.remove(),3500);
+  document.getElementById('statusTxt').textContent=msg;
+}
+
+function show(id, el) {
+  document.querySelectorAll('.sec').forEach(s=>s.classList.toggle('on',s.id===id));
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('on'));
+  el.classList.add('on');
+  if(id==='tb') renderTB();
+  if(id==='neraca') renderNeraca();
+  if(id==='labarugi') renderLR();
+  if(id==='aruskas') renderAK();
+  if(id==='bukubesar') renderLedger(document.getElementById('ledgerAccSel').value);
+  if(id==='dashboard') renderDashboard();
+  if(id==='rasio') renderRatios();
+  if(id==='komparatif'){ populateKomparatif(); renderKomparatif(); }
+  if(id==='saldoawal') renderSaldoAwal();
+}
+
+function updateBadges() {
+  const n = activeJournals().filter(j=>j.type!=='ADJ').length;
+  document.getElementById('badge-jurnal').textContent = n;
+}
+
+function populatePeriodFilters() {
+  const js = activeJournals();
+  const months = [...new Set(js.map(j=>j.date.slice(0,7)))].sort();
+  const opts = '<option value="">Semua Periode</option>' + months.map(m=>`<option value="${m}">${m}</option>`).join('');
+  ['tbPeriodSel','neracaPeriodSel','lrPeriodSel','akPeriodSel','ledgerMonthSel','rasioPeriodSel'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML=opts;
+  });
+  const jf = document.getElementById('journalMonthFilter');
+  if(jf) jf.innerHTML='<option value="">Semua Bulan</option>'+months.map(m=>`<option value="${m}">${m}</option>`).join('');
+}
+
+function mkChart(id, type, labels, datasets, legend=false) {
+  if(chartInstances[id]) try{chartInstances[id].destroy();}catch(e){}
+  const el=document.getElementById(id); if(!el) return;
+  Chart.defaults.font.family="'DM Sans',sans-serif";
+  Chart.defaults.color='#64748b';
+  chartInstances[id]=new Chart(el,{
+    type, data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:legend,position:'bottom',labels:{font:{size:10},boxWidth:10,padding:8}},
+               tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}},
+      scales: type==='doughnut'?undefined:{
+        x:{grid:{color:'rgba(0,0,0,0.05)',drawBorder:false},ticks:{font:{size:10}}},
+        y:{grid:{color:'rgba(0,0,0,0.05)',drawBorder:false},ticks:{font:{size:10},callback:v=>{
+          const a=Math.abs(v);return a>=1e9?(a/1e9).toFixed(1)+'M':a>=1e6?(a/1e6).toFixed(0)+'Jt':v;
+        }}},
+      },
+    }
+  });
+}
+
+// close dropdown on outside click
+document.addEventListener('click', e=>{
+  if(!document.getElementById('coSwitcher').contains(e.target))
+    document.getElementById('coDrop').classList.remove('on');
+});
+</script>
+</body>
+</html>
